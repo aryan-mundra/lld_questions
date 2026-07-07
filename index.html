@@ -31,6 +31,7 @@
   .tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
   .tag{font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;color:#fff;}
   .t-strategy{background:var(--green);} .t-facade{background:var(--orange);} .t-oop{background:var(--purple);}
+  .t-state{background:var(--blue);}
   .card .open{font-size:13.5px;font-weight:700;color:var(--blue);}
   .card.soon{opacity:.7;cursor:default;border-style:dashed;}
   .card.soon:hover{transform:none;box-shadow:0 1px 3px rgba(0,0,0,.05);border-color:var(--line);}
@@ -75,12 +76,25 @@
       <span class="open">Open interactive guide →</span>
     </a>
 
+    <!-- Vending Machine -->
+    <a class="card" href="VendingMachine/vending-machine-lld.html">
+      <span class="badge ready">● READY</span>
+      <div class="icon">🥤</div>
+      <h3>Vending Machine</h3>
+      <p>Coins, product selection, dispensing &amp; change — a hands-on tour of the State design pattern.</p>
+      <div class="tags">
+        <span class="tag t-state">State</span>
+        <span class="tag t-oop">OOP basics</span>
+      </div>
+      <span class="open">Open interactive guide →</span>
+    </a>
+
     <!-- Placeholder for the next problem (duplicate this block when you add one) -->
     <div class="card soon">
       <span class="badge">SOON</span>
       <div class="icon">🛗</div>
       <h3>More coming…</h3>
-      <p>Elevator, Vending Machine, Splitwise and more will appear here as you add them.</p>
+      <p>Elevator, Splitwise, and more will appear here as you add them.</p>
       <span class="open" style="color:var(--muted)">Not yet available</span>
     </div>
 
