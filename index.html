@@ -40,6 +40,14 @@
 
   footer{margin-top:40px;text-align:center;color:var(--muted);font-size:13px;}
   footer code{background:var(--panel2);padding:1px 6px;border-radius:4px;}
+
+  /* phones: smaller heading + single-column cards that never overflow */
+  @media(max-width:480px){
+    .wrap{padding:28px 16px 60px;}
+    h1{font-size:25px;} .tagline{font-size:14px;}
+    .grid{grid-template-columns:1fr;gap:14px;}
+    .card{padding:17px;}
+  }
 </style>
 </head>
 <body>
