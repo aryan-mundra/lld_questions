@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LLD Playground — Learn Low Level Design by Building</title>
+<style>
+  :root{
+    --ink:#1f2937;--muted:#64748b;--line:#e2e8f0;--panel:#ffffff;--panel2:#f1f5f9;
+    --blue:#2563eb;--green:#0ea371;--orange:#d97706;--purple:#7c5cff;--red:#e5484d;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+       background:linear-gradient(160deg,#f0f4fb 0%,#eef2f9 40%,#f3eefb 100%);background-attachment:fixed;
+       color:var(--ink);line-height:1.6;min-height:100vh;}
+  .wrap{max-width:960px;margin:0 auto;padding:40px 22px 70px;}
+
+  header{text-align:center;margin-bottom:34px;}
+  h1{font-size:32px;margin:0 0 6px;}
+  .tagline{color:var(--muted);font-size:16px;margin:0;}
+
+  .sectitle{font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 14px;}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:18px;}
+  .card{display:block;text-decoration:none;color:inherit;background:var(--panel);border:1px solid var(--line);
+        border-radius:14px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.05);transition:.18s;position:relative;overflow:hidden;}
+  a.card:hover{transform:translateY(-4px);box-shadow:0 10px 24px rgba(37,99,235,.14);border-color:var(--blue);}
+  .card .icon{font-size:30px;margin-bottom:10px;}
+  .card h3{margin:0 0 4px;font-size:19px;}
+  .card p{margin:0 0 14px;font-size:13.5px;color:var(--muted);}
+  .tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
+  .tag{font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;color:#fff;}
+  .t-strategy{background:var(--green);} .t-facade{background:var(--orange);} .t-oop{background:var(--purple);}
+  .card .open{font-size:13.5px;font-weight:700;color:var(--blue);}
+  .card.soon{opacity:.7;cursor:default;border-style:dashed;}
+  .card.soon:hover{transform:none;box-shadow:0 1px 3px rgba(0,0,0,.05);border-color:var(--line);}
+  .badge{position:absolute;top:14px;right:14px;font-size:10px;font-weight:800;letter-spacing:.05em;
+         background:var(--panel2);color:var(--muted);padding:3px 9px;border-radius:20px;}
+  .badge.ready{background:rgba(14,163,113,.14);color:var(--green);}
+
+  footer{margin-top:40px;text-align:center;color:var(--muted);font-size:13px;}
+  footer code{background:var(--panel2);padding:1px 6px;border-radius:4px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>🧩 LLD Playground</h1>
+    <p class="tagline">Learn Low Level Design the way interviews expect — understand, gather requirements, design incrementally, then dry-run it. One interactive page per problem.</p>
+  </header>
+
+  <p class="sectitle">Available problems</p>
+  <div class="grid">
+
+    <!-- Parking Lot -->
+    <a class="card" href="ParkingLot/parking-lot-lld.html">
+      <span class="badge ready">● READY</span>
+      <div class="icon">🅿️</div>
+      <h3>Parking Lot</h3>
+      <p>Multi-floor lot, sized spots, tickets, and time-based fees — built one requirement at a time.</p>
+      <div class="tags">
+        <span class="tag t-strategy">Strategy</span>
+        <span class="tag t-facade">Facade</span>
+        <span class="tag t-oop">OOP basics</span>
+      </div>
+      <span class="open">Open interactive guide →</span>
+    </a>
+
+    <!-- Placeholder for the next problem (duplicate this block when you add one) -->
+    <div class="card soon">
+      <span class="badge">SOON</span>
+      <div class="icon">🛗</div>
+      <h3>More coming…</h3>
+      <p>Elevator, Vending Machine, Splitwise and more will appear here as you add them.</p>
+      <span class="open" style="color:var(--muted)">Not yet available</span>
+    </div>
+
+  </div>
+
+  <footer>
+    Add a new problem by copying a card above and pointing <code>href</code> to its <code>*-lld.html</code> file.
+  </footer>
+
+</div>
+</body>
+</html>

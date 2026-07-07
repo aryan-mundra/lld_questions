@@ -1,0 +1,10 @@
+# Compiled Java output (regenerated on every build)
+out/
+*.class
+
+# IntelliJ project files (machine-specific)
+.idea/
+*.iml
+
+# macOS
+.DS_Store
