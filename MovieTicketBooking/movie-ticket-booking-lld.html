@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Movie Ticket Booking LLD — Learn by Building</title>
+<style>
+  :root{
+    --ink:#1f2937;--muted:#64748b;--line:#e2e8f0;--bg:#eef2f9;--panel:#ffffff;--panel2:#f1f5f9;
+    --blue:#2563eb;--green:#0ea371;--orange:#d97706;--purple:#7c5cff;--red:#e5484d;--yellow:#f5c518;
+    --codebg:#f8fafc;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+       background:linear-gradient(160deg,#f0f4fb 0%,#eef2f9 40%,#f3eefb 100%);background-attachment:fixed;
+       color:var(--ink);line-height:1.6;}
+  a{color:var(--blue);}
+  code,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;}
+
+  header{padding:22px 26px 0;max-width:1080px;margin:0 auto;}
+  h1{font-size:26px;margin:0 0 2px;}
+  .tagline{color:var(--muted);margin:0 0 16px;font-size:15px;}
+  nav{display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:0;}
+  nav button{background:none;border:none;color:var(--muted);font-size:14px;font-weight:600;padding:10px 14px;cursor:pointer;border-bottom:3px solid transparent;border-radius:6px 6px 0 0;}
+  nav button:hover{color:var(--ink);background:var(--panel);}
+  nav button.active{color:var(--blue);border-bottom-color:var(--blue);}
+  nav button .num{display:inline-block;width:20px;height:20px;line-height:20px;text-align:center;background:var(--panel2);border-radius:50%;font-size:12px;margin-right:6px;}
+  nav button.active .num{background:var(--blue);color:#fff;}
+
+  main{max-width:1080px;margin:0 auto;padding:24px 26px 80px;}
+  section{display:none;animation:fade .3s ease;}
+  section.active{display:block;}
+  @keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+
+  h2{font-size:22px;margin:0 0 4px;}
+  .hint{color:var(--muted);font-size:14.5px;margin:0 0 20px;}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin:14px 0;}
+  .card h3{margin:0 0 8px;font-size:17px;}
+  .pill{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;color:#fff;}
+  .p-actor{background:var(--purple);} .p-entity{background:var(--green);} .p-behavior{background:var(--orange);}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media(max-width:760px){.grid2{grid-template-columns:1fr;}}
+  ul{margin:8px 0;padding-left:20px;} li{margin:4px 0;}
+  .kbd{background:var(--panel2);border:1px solid var(--line);border-radius:5px;padding:1px 7px;font-size:12.5px;}
+
+  .req{display:flex;align-items:flex-start;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 15px;margin:8px 0;cursor:pointer;transition:.15s;}
+  .req:hover{border-color:var(--blue);transform:translateX(3px);}
+  .req .box{width:22px;height:22px;border-radius:6px;border:2px solid var(--line);flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;transition:.15s;}
+  .req.done .box{background:var(--green);border-color:var(--green);}
+  .req .tag{font-size:11px;font-weight:800;padding:2px 8px;border-radius:6px;color:#fff;margin-right:4px;}
+  .req.f .tag{background:var(--blue);} .req.nf .tag{background:var(--red);}
+  .req .txt{font-size:14.5px;}
+  .req .go{margin-left:auto;color:var(--blue);font-size:13px;font-weight:700;white-space:nowrap;align-self:center;}
+  .legend2{font-size:13px;color:var(--muted);margin:6px 0 16px;}
+
+  .stepbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+  .stepbar .dot{width:34px;height:34px;border-radius:9px;background:var(--panel2);color:var(--muted);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;cursor:pointer;transition:.15s;}
+  .stepbar .dot.active{background:var(--blue);color:#fff;border-color:var(--blue);}
+  .stepbar .dot.done{color:var(--green);border-color:var(--green);}
+  .stepbar .conn{flex:1;height:2px;background:var(--line);min-width:8px;}
+  .navbtns{display:flex;justify-content:space-between;margin-top:18px;gap:10px;}
+  .btn{background:var(--blue);color:#fff;border:none;border-radius:9px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;transition:.15s;}
+  .btn:hover{filter:brightness(1.1);} .btn:disabled{opacity:.35;cursor:default;}
+  .btn.ghost{background:var(--panel2);color:var(--ink);border:1px solid var(--line);}
+
+  .why{background:var(--panel2);border-left:3px solid var(--orange);border-radius:8px;padding:10px 14px;font-size:14px;margin:12px 0;}
+  .why b{color:var(--orange);}
+
+  .qawrap{margin:16px 0 4px;}
+  .qawrap .qatitle{font-size:12px;color:var(--muted);font-weight:700;letter-spacing:.05em;margin-bottom:8px;text-transform:uppercase;}
+  details.qa{background:var(--panel);border:1px solid var(--line);border-radius:9px;margin:7px 0;overflow:hidden;}
+  details.qa summary{cursor:pointer;padding:11px 15px;font-size:14.5px;font-weight:600;list-style:none;display:flex;gap:9px;align-items:flex-start;}
+  details.qa summary::-webkit-details-marker{display:none;}
+  details.qa summary .q{color:var(--blue);font-weight:800;flex-shrink:0;}
+  details.qa summary::after{content:"+";margin-left:auto;color:var(--muted);font-size:18px;line-height:1;font-weight:700;}
+  details.qa[open] summary::after{content:"–";}
+  details.qa summary:hover{background:var(--panel2);}
+  details.qa .ans{padding:2px 15px 13px 34px;font-size:14px;color:var(--ink);border-top:1px solid var(--line);}
+  details.qa .ans code{background:var(--panel2);padding:1px 5px;border-radius:4px;font-size:12.5px;}
+  .chips{margin:10px 0;}
+  .chip{display:inline-block;background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:3px 10px;font-size:12.5px;margin:3px 5px 3px 0;color:var(--muted);}
+  .chip.new{background:rgba(49,196,141,.15);border-color:var(--green);color:var(--green);font-weight:700;}
+
+  pre{background:var(--codebg);border:1px solid var(--line);border-radius:10px;padding:12px 14px;overflow:auto;font-size:13px;line-height:1.45;margin:10px 0;color:#111827;}
+  pre .cl{white-space:pre;padding-left:10px;box-shadow:inset 3px 0 0 transparent;}
+  pre .cl.new{box-shadow:inset 3px 0 0 #94a3b8;}
+  pre .cm{color:#98a2b3;}
+
+  .diagram{display:flex;flex-wrap:wrap;gap:16px;}
+  .umlbox{background:var(--panel);border:1px solid var(--line);border-radius:10px;min-width:190px;flex:1 1 190px;overflow:hidden;}
+  .umlbox .t{padding:8px 12px;font-weight:800;color:#fff;font-size:14px;}
+  .umlbox .sec{padding:8px 12px;font-size:12.5px;border-top:1px solid var(--line);}
+  .umlbox .sec .mono{color:var(--muted);display:block;}
+  .t-model{background:var(--green);} .t-service{background:var(--orange);} .t-enum{background:var(--purple);} .t-if{background:var(--blue);}
+  .rel{display:flex;gap:12px;align-items:flex-start;padding:8px 0;border-bottom:1px dashed var(--line);font-size:14px;}
+  .rel:last-child{border:none;} .rel .a{font-family:monospace;color:var(--blue);font-weight:800;min-width:58px;}
+
+  /* dry run: seat map */
+  .drywrap{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media(max-width:820px){.drywrap{grid-template-columns:1fr;}}
+  .theatre{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;}
+  .screen{margin:0 auto 18px;max-width:280px;height:16px;background:linear-gradient(#cbd5e1,#eef2f7);border-radius:50%/100% 100% 0 0;text-align:center;font-size:10px;font-weight:800;color:var(--muted);letter-spacing:.2em;}
+  .seatmap{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
+  .seat{width:66px;border:2px solid var(--line);border-radius:8px 8px 5px 5px;background:var(--panel2);padding:8px 6px;text-align:center;transition:.3s;}
+  .seat .sid{font-weight:800;font-size:14px;}
+  .seat .sp{font-size:10px;color:var(--muted);}
+  .seat .who{font-size:10px;font-weight:800;margin-top:3px;min-height:12px;}
+  .seat.booked{background:rgba(14,163,113,.15);border-color:var(--green);}
+  .seat.booked .who{color:var(--green);}
+  .seat.contest{border-color:var(--yellow);background:rgba(245,197,24,.18);animation:pulse .7s ease infinite;}
+  .seat.fail{border-color:var(--red);background:rgba(229,72,77,.14);animation:shake .5s ease;}
+  @keyframes pulse{0%{transform:scale(1);}50%{transform:scale(1.06);}100%{transform:scale(1);}}
+  @keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-4px);}75%{transform:translateX(4px);}}
+  .legendrow{display:flex;gap:14px;justify-content:center;margin-top:14px;font-size:12px;color:var(--muted);flex-wrap:wrap;}
+  .legendrow span::before{content:"";display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px;}
+  .lg-free::before{background:var(--panel2);border:1px solid var(--line);}
+  .lg-booked::before{background:rgba(14,163,113,.4);}
+  .lg-contest::before{background:rgba(245,197,24,.6);}
+  .console{background:#0f172a;border:1px solid var(--line);border-radius:12px;padding:14px 16px;font-family:ui-monospace,monospace;font-size:13px;min-height:180px;}
+  .console .ln{padding:2px 0;opacity:0;animation:slidein .3s forwards;}
+  @keyframes slidein{to{opacity:1;}}
+  .console .in{color:#60a5fa;} .console .out{color:#34d399;} .console .warn{color:#f87171;} .console .sys{color:#94a3b8;}
+  .narr{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px 15px;margin-top:14px;font-size:14.5px;min-height:52px;}
+  .narr b{color:var(--orange);}
+
+  @media(max-width:600px){
+    header{padding:16px 14px 0;} main{padding:18px 14px 70px;}
+    h1{font-size:21px;} .tagline{font-size:13.5px;} h2{font-size:19px;} h3{font-size:16px;} .hint{font-size:13.5px;}
+    nav{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+    nav::-webkit-scrollbar{display:none;}
+    nav button{white-space:nowrap;padding:9px 11px;font-size:13px;flex:0 0 auto;}
+    nav button .num{width:18px;height:18px;font-size:11px;margin-right:5px;}
+    .card{padding:14px 15px;} .grid2{grid-template-columns:1fr;}
+    .stepbar{gap:6px;} .stepbar .conn{display:none;} .stepbar .dot{width:38px;height:38px;font-size:12px;}
+    pre{font-size:12px;padding:10px 12px;}
+    .navbtns{flex-direction:column;} .navbtns .btn{width:100%;}
+    .umlbox{flex:1 1 100%;min-width:0;}
+    .console{min-height:140px;font-size:12px;}
+    details.qa summary{font-size:13.5px;padding:10px 12px;} details.qa .ans{font-size:13px;padding:2px 12px 12px 28px;}
+    .req{padding:11px 12px;} .req .go{display:none;}
+    .seat{width:58px;}
+  }
+  @media(max-width:380px){ .stepbar .dot{width:33px;height:33px;font-size:11px;} }
+</style>
+</head>
+<body>
+<header>
+  <h1>🎬 Movie Ticket Booking — Low Level Design</h1>
+  <p class="tagline">Learn by building it the way an interviewer expects: understand → gather requirements → design one requirement at a time → integrate → dry run.</p>
+  <nav id="nav">
+    <button data-t="understand" class="active"><span class="num">1</span>Understand</button>
+    <button data-t="requirements"><span class="num">2</span>Requirements</button>
+    <button data-t="design"><span class="num">3</span>Incremental Design</button>
+    <button data-t="integration"><span class="num">4</span>Final Integration</button>
+    <button data-t="dryrun"><span class="num">5</span>Dry Run</button>
+  </nav>
+</header>
+
+<main>
+
+<!-- 1. UNDERSTAND -->
+<section id="understand" class="active">
+  <h2>1 · Understand the problem</h2>
+  <p class="hint">Before any code, say the problem out loud in plain English. Build intuition first.</p>
+
+  <div class="card">
+    <h3>📝 Problem statement</h3>
+    <p>Design a <b>movie ticket booking</b> system (BookMyShow-style). A user browses <b>shows</b> (a movie on a screen at a time), sees which <b>seats</b> are free, picks some, and pays. The one rule that must never break: <b>two users can never book the same seat</b> — even if they click at the exact same moment.</p>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <h3><span class="pill p-actor">ACTORS</span> Who uses it?</h3>
+      <ul>
+        <li><b>User</b> — browses shows, picks seats, pays.</li>
+        <li><b>System</b> — tracks availability, books atomically, prices it.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3><span class="pill p-entity">ENTITIES</span> What "things" exist?</h3>
+      <ul>
+        <li>Movie, Theatre, Screen, Seat</li>
+        <li>Show (movie + screen + time)</li>
+        <li>User, Booking</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3><span class="pill p-behavior">BEHAVIOR</span> What happens? (the flow)</h3>
+    <p style="font-size:15px;" class="mono">pick a show → see free seats → select seats → book (atomically!) → pay → confirmed</p>
+    <p class="hint" style="margin:6px 0 0;">The distinctive challenge isn't a GoF pattern — it's <b>concurrency</b>: making "check the seat is free" and "reserve it" happen as one un-interruptible step.</p>
+  </div>
+
+  <div class="card" style="border-color:var(--purple);background:rgba(124,92,255,.05);">
+    <h3>🧩 Design focus</h3>
+    <p><b>Concurrency &amp; seat locking</b> — the key challenge is preventing double-booking when many users act at once. The fix is an <b>atomic check-and-reserve</b> (a lock), built in requirement <b>NF1</b>. (Not a GoF pattern; pricing could optionally use <b>Strategy</b>.)</p>
+  </div>
+
+  <div class="card" style="border-color:var(--blue);">
+    👉 <b>Next:</b> open the <b>Requirements</b> tab and click each one to build the design piece by piece.
+  </div>
+</section>
+
+<!-- 2. REQUIREMENTS -->
+<section id="requirements">
+  <h2>2 · Gather requirements</h2>
+  <p class="hint">Split into <b style="color:var(--blue)">Functional</b> (what it must do) and <b style="color:var(--red)">Non-functional</b> (how well). Click a requirement to jump to its design step.</p>
+  <div class="legend2">Tip: label them F1, F2… so every class you create later can be traced back to a requirement.</div>
+  <div id="reqList"></div>
+</section>
+
+<!-- 3. INCREMENTAL DESIGN -->
+<section id="design">
+  <h2>3 · Design — one requirement at a time</h2>
+  <p class="hint">Each step adds <b>only</b> what's needed for that requirement. Newly added lines are marked with a bar on the left. The design grows; it never restarts.</p>
+
+  <div class="stepbar" id="stepbar"></div>
+  <div class="card" id="stepReq" style="border-color:var(--blue);"></div>
+  <div class="why" id="stepWhy"></div>
+  <div>
+    <div style="font-size:12px;color:var(--muted);font-weight:700;letter-spacing:.05em;margin-bottom:4px;">DESIGN SO FAR</div>
+    <div class="chips" id="stepChips"></div>
+  </div>
+  <div id="stepCode"></div>
+  <div id="stepQA"></div>
+
+  <div class="navbtns">
+    <button class="btn ghost" id="prevBtn">← Previous</button>
+    <button class="btn" id="nextBtn">Next requirement →</button>
+  </div>
+</section>
+
+<!-- 4. INTEGRATION -->
+<section id="integration">
+  <h2>4 · Final integration</h2>
+  <p class="hint">All pieces combined. Here's the class diagram, relationships, and the end-to-end flow.</p>
+
+  <h3 style="margin-top:18px;">📦 Class diagram</h3>
+  <div class="diagram">
+    <div class="umlbox"><div class="t t-enum">«enum» SeatType</div><div class="sec"><span class="mono">REGULAR(200)</span><span class="mono">PREMIUM(350)</span></div></div>
+    <div class="umlbox"><div class="t t-enum">«enum» BookingStatus</div><div class="sec"><span class="mono">CONFIRMED, FAILED</span></div></div>
+    <div class="umlbox"><div class="t t-model">Movie / Seat / Screen</div><div class="sec"><span class="mono">Movie: id, title</span><span class="mono">Seat: id, type</span><span class="mono">Screen: name, seats</span></div></div>
+    <div class="umlbox"><div class="t t-model">Show</div><div class="sec"><span class="mono">- movie, screen, time</span><span class="mono">- bookedSeats : Set</span></div><div class="sec"><span class="mono">+ synchronized tryReserve()</span></div></div>
+    <div class="umlbox"><div class="t t-model">User / Booking</div><div class="sec"><span class="mono">User: name</span><span class="mono">Booking: seats, amount, status</span></div></div>
+    <div class="umlbox"><div class="t t-service">BookingService «controller»</div><div class="sec"><span class="mono">+ book(user, show, seatIds)</span></div></div>
+  </div>
+
+  <h3 style="margin-top:24px;">🔗 Relationships (in plain words)</h3>
+  <div class="card">
+    <div class="rel"><span class="a">◆──</span><div><b>HAS:</b> a Screen has Seats; a Show references a Movie + a Screen and owns its own <code>bookedSeats</code> set; a Booking has seats + amount.</div></div>
+    <div class="rel"><span class="a">1—*</span><div><b>ONE-TO-MANY:</b> one Movie plays in many Shows; one Show produces many Bookings.</div></div>
+    <div class="rel"><span class="a">🔒</span><div><b>ATOMIC:</b> BookingService calls <code>show.tryReserve()</code> which is <code>synchronized</code> — the check &amp; reserve happen as one step.</div></div>
+  </div>
+
+  <h3 style="margin-top:24px;">🌊 End-to-end flow</h3>
+  <div class="card mono" style="font-size:14px;line-height:1.9;">
+    book(user, show, [A5])<br>
+    &nbsp;&nbsp;└─ validate seats exist on the screen<br>
+    &nbsp;&nbsp;└─ show.tryReserve([A5])   <span class="cm">// synchronized: atomic check + reserve</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├─ taken? → return FAILED booking<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─ free? → reserve, price by seat type → CONFIRMED 🎟️
+  </div>
+</section>
+
+<!-- 5. DRY RUN -->
+<section id="dryrun">
+  <h2>5 · Dry run</h2>
+  <p class="hint">Book seats, hit an already-taken one, then watch two users <b>race</b> for the last seat — only one wins. Use <span class="kbd">Next step ▶</span>.</p>
+
+  <div class="drywrap">
+    <div>
+      <div class="theatre">
+        <div class="screen">SCREEN</div>
+        <div class="seatmap" id="seatmap"></div>
+        <div class="legendrow"><span class="lg-free">free</span><span class="lg-booked">booked</span><span class="lg-contest">contested</span></div>
+      </div>
+      <div class="narr" id="narr">Press <b>Next step ▶</b> to begin.</div>
+      <div class="navbtns">
+        <button class="btn ghost" id="dryReset">⟲ Reset</button>
+        <button class="btn" id="dryNext">Next step ▶</button>
+      </div>
+    </div>
+    <div class="console" id="console"></div>
+  </div>
+</section>
+
+</main>
+
+<script>
+document.getElementById('nav').addEventListener('click', e=>{
+  const b = e.target.closest('button'); if(!b) return; showTab(b.dataset.t);
+});
+function showTab(t){
+  document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active', x.dataset.t===t));
+  document.querySelectorAll('section').forEach(s=>s.classList.toggle('active', s.id===t));
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+/* REQUIREMENTS */
+const requirements = [
+  {id:'F1', kind:'f', text:'Model movies, a screen with seats, and a show (a movie on a screen at a time); users book.'},
+  {id:'F2', kind:'f', text:'A show tracks which seats are booked and can list the seats still available.'},
+  {id:'F3', kind:'f', text:'A user books one or more seats and gets a booking with the total price (price by seat type).'},
+  {id:'F4', kind:'f', text:'Reject invalid seats and already-booked seats — the booking fails cleanly.'},
+  {id:'F5', kind:'f', text:'Two users must NEVER book the same seat — but the naive "check then book" has a race.'},
+  {id:'NF1',kind:'nf',text:'Be correct under concurrency: make check-and-reserve atomic (locking / thread-safety).'},
+];
+const reqList = document.getElementById('reqList');
+requirements.forEach((r,i)=>{
+  const el = document.createElement('div');
+  el.className = 'req '+r.kind;
+  el.innerHTML = `<div class="box">✓</div><div class="txt"><span class="tag">${r.id}</span>${r.text}</div><span class="go">design this →</span>`;
+  el.onclick = ()=>{ el.classList.add('done'); goToStep(i); showTab('design'); };
+  reqList.appendChild(el);
+});
+
+/* CODE RENDERER */
+function code(str){
+  const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return '<pre>'+str.split('\n').map(line=>{
+    let isNew=false;
+    if(line.includes('[[')){ isNew=true; line=line.replace(/\[\[|\]\]/g,''); }
+    let h = esc(line)
+      .replace(/(\/\*[\s\S]*?\*\/)/g,'<span class="cm">$1</span>')
+      .replace(/(\/\/.*)$/,'<span class="cm">$1</span>');
+    if(!h) h='&nbsp;';
+    return '<div class="cl'+(isNew?' new':'')+'">'+h+'</div>';
+  }).join('')+'</pre>';
+}
+
+const steps = [
+  { req:'F1', label:'F1 · Domain model',
+    why:'Model the real-world things. A <b>Show</b> is the key one — it ties a Movie to a Screen at a time, and it\'s where booking state will live (a physical seat is reused across many shows).',
+    chips:['SeatType','Movie','Seat','Screen','Show','User'], newChips:['SeatType','Movie','Seat','Screen','Show','User'],
+    code:
+`[[enum SeatType { REGULAR, PREMIUM }]]
+
+[[class Movie  { String id; String title; }]]
+[[class Seat   { String id; SeatType type; }        // e.g. "A1"]]
+[[class Screen { String name; List<Seat> seats; }]]
+[[class User   { String name; }]]
+
+[[// a movie on a screen at a given time]]
+[[class Show {]]
+[[    String id;]]
+[[    Movie movie;]]
+[[    Screen screen;]]
+[[    String startTime;]]
+[[}]]`
+  },
+  { req:'F2', label:'F2 · Track availability',
+    why:'Each Show keeps the set of seats already taken <b>for that show</b>. From that we can answer "is this seat free?" and list all free seats.',
+    chips:['...previous...','bookedSeats','availableSeats()'], newChips:['bookedSeats','availableSeats()'],
+    code:
+`class Show {
+[[    // seats already taken FOR THIS SHOW (free again for the next show)]]
+[[    Set<String> bookedSeats = new HashSet<>();]]
+
+[[    boolean isAvailable(String seatId) {]]
+[[        return !bookedSeats.contains(seatId);]]
+[[    }]]
+
+[[    List<String> availableSeats() {]]
+[[        List<String> free = new ArrayList<>();]]
+[[        for (Seat s : screen.seats) {]]
+[[            if (isAvailable(s.id)) {]]
+[[                free.add(s.id);]]
+[[            }]]
+[[        }]]
+[[        return free;]]
+[[    }]]
+}`
+  },
+  { req:'F3', label:'F3 · Book seats + price',
+    why:'A <b>BookingService</b> books the chosen seats and totals the price. Price lives on the <b>SeatType</b> (regular vs premium), so pricing is a simple lookup.',
+    chips:['...previous...','SeatType price','Booking','BookingService'], newChips:['SeatType price','Booking','BookingService'],
+    code:
+`[[enum SeatType {]]
+[[    REGULAR(200), PREMIUM(350);   // price per seat]]
+[[    final int price;]]
+[[    SeatType(int p) { price = p; }]]
+[[}]]
+
+[[class Booking {]]
+[[    User user; Show show; List<String> seatIds; int amount; BookingStatus status;]]
+[[}]]
+
+[[class BookingService {]]
+[[    Booking book(User user, Show show, List<String> seatIds) {]]
+[[        int amount = 0;]]
+[[        for (String id : seatIds) {]]
+[[            amount += show.screen.getSeat(id).type.price;   // price by type]]
+[[        }]]
+[[        show.bookedSeats.addAll(seatIds);]]
+[[        return new Booking(user, show, seatIds, amount, CONFIRMED);]]
+[[    }]]
+[[}]]`
+  },
+  { req:'F4', label:'F4 · Reject invalid / taken seats',
+    why:'Guard the inputs. A seat that doesn\'t exist is a bad request (throw). A seat that\'s already booked is an expected outcome → return a <b>FAILED</b> booking, not a crash.',
+    chips:['...previous...','validation','BookingStatus.FAILED'], newChips:['validation','BookingStatus.FAILED'],
+    code:
+`class BookingService {
+    Booking book(User user, Show show, List<String> seatIds) {
+        for (String id : seatIds) {
+[[            if (show.screen.getSeat(id) == null) {]]
+[[                throw new IllegalArgumentException("No such seat: " + id);]]
+[[            }]]
+[[            if (!show.isAvailable(id)) {                  // already taken]]
+[[                return failed(user, show, seatIds);       // clean FAIL]]
+[[            }]]
+        }
+        // ...price + reserve + CONFIRMED...
+    }
+}`
+  },
+  { req:'F5', label:'F5 · The double-booking race (the bug)',
+    why:'"Two users must never book the same seat" sounds done — but the naive version <b>checks</b> then <b>reserves</b> in two steps. Between them, another thread can sneak in. This is the classic <b>check-then-act</b> race condition.',
+    chips:['(bug demonstrated — fixed in NF1)'], newChips:[],
+    code:
+`// PROBLEM: check and reserve are TWO separate steps.
+Booking book(User user, Show show, List<String> seatIds) {
+    for (String id : seatIds) {
+[[        if (!show.isAvailable(id)) {      // (1) CHECK "is A5 free?"]]
+[[            return failed(...);]]
+[[        }]]
+    }
+[[    // <-- Carol's thread AND Dave's thread can BOTH reach here for A5 --]]
+[[    show.bookedSeats.addAll(seatIds);    // (2) RESERVE]]
+    return confirmed(...);
+}
+// Both saw A5 free at (1), both reserve at (2)  ->  A5 DOUBLE BOOKED ✗`
+  },
+  { req:'NF1', label:'NF1 · Fix: atomic check-and-reserve',
+    why:'Make the check and the reserve <b>one un-interruptible step</b>, guarded by a lock. A <code>synchronized</code> method lets only one thread reserve on a show at a time, so the race disappears.',
+    chips:['...previous...','synchronized tryReserve()'], newChips:['synchronized tryReserve()'],
+    code:
+`class Show {
+[[    // synchronized -> only ONE thread runs this at a time per show]]
+[[    synchronized boolean tryReserve(List<String> seatIds) {]]
+[[        for (String id : seatIds) {]]
+[[            if (bookedSeats.contains(id)) {]]
+[[                return false;              // someone already has it]]
+[[            }]]
+[[        }]]
+[[        bookedSeats.addAll(seatIds);       // reserve ALL, atomically]]
+[[        return true;]]
+[[    }]]
+}
+
+class BookingService {
+    Booking book(User user, Show show, List<String> seatIds) {
+[[        if (!show.tryReserve(seatIds)) {   // atomic check + reserve]]
+[[            return failed(user, show, seatIds);]]
+[[        }]]
+        // ...price + CONFIRMED...
+    }
+}
+// Now only ONE of Carol/Dave reserves A5; the other gets false -> FAILED ✓`
+  },
+];
+
+const qaByReq = {
+  F1: [
+    {q:'Why is Show separate from Movie and Screen?', a:'One movie plays in many shows (different screens/times), and booking state (which seats are taken) belongs to a specific show, not to the movie or the physical screen. Show is the join that owns that state.'},
+    {q:'Should Theatre be a class too?', a:'Yes in a fuller design (a Theatre has many Screens, a city has many Theatres). For the core booking logic we can start at Screen/Show and add Theatre when a requirement needs it — don\'t model what you don\'t use yet.'},
+  ],
+  F2: [
+    {q:'Why track booked seats on the Show, not on the Seat object?', a:'A Seat is a physical chair reused across every show. If the Seat held "booked", it could only be booked once ever. Booking is per-show, so the Show owns a set of booked seat-ids.'},
+    {q:'Why a Set of seat ids instead of a boolean on each seat?', a:'A Set gives O(1) "is it taken?" and clean add-all reserve, and it naturally scopes to this show. It also makes the atomic reserve in NF1 easy to reason about.'},
+  ],
+  F3: [
+    {q:'Where should pricing live?', a:'On the SeatType as a simple price here. If pricing got dynamic (surge, weekend, coupons), I\'d pull it into a <code>PricingStrategy</code> (Strategy pattern) so rules can change without touching booking.'},
+    {q:'Why a BookingService instead of putting book() on Show?', a:'Booking coordinates several things (validation, pricing, creating a Booking) — that orchestration is a service responsibility. Show stays focused on its seats. It also gives one clean entry point (a facade) for the flow.'},
+  ],
+  F4: [
+    {q:'Why throw for an invalid seat but return FAILED for a taken one?', a:'An unknown seat id is a bad request / bug in the caller — fail fast with an exception. A taken seat is a normal, expected outcome (you lost the race) — represent it as a FAILED booking the caller can handle gracefully.'},
+  ],
+  F5: [
+    {q:'What exactly is a race condition here?', a:'Two threads interleave on shared state. Both run the "is A5 free?" check and both see "yes" before either reserves, so both then reserve A5. The bug is that check and act are separate, non-atomic steps ("check-then-act").'},
+    {q:'How would I even reproduce it?', a:'Fire two booking threads for the same seat simultaneously (as the Main demo does). Without the fix, both can occasionally succeed. It\'s intermittent — which is exactly why races are dangerous.'},
+  ],
+  NF1: [
+    {q:'How does synchronized fix it?', a:'It puts a lock on the Show: only one thread can be inside <code>tryReserve</code> at a time for that show. So the check and the reserve run together as one atomic unit — the second thread only enters after the first has fully finished, sees the seat taken, and fails.'},
+    {q:'Does locking the whole show hurt performance?', a:'It serializes bookings per show. Fine for one JVM and moderate load. To scale, lock at finer grain (per seat), or keep the critical section tiny. The trade-off is correctness vs concurrency — here correctness wins.'},
+    {q:'How is this done in a real, distributed system?', a:'One JVM\'s <code>synchronized</code> isn\'t enough across servers. Options: a temporary <b>seat hold with a timeout</b> (lock the seat for a few minutes during payment), a <b>distributed lock</b> (e.g. Redis/Redlock), or a <b>DB transaction</b> with a unique constraint / <code>SELECT ... FOR UPDATE</code> / optimistic locking (a version column).'},
+    {q:'Why hold seats temporarily instead of booking instantly?', a:'Users need time to pay. Real systems reserve the seat for, say, 5 minutes (a hold). If payment succeeds it becomes a booking; if it times out the hold is released so others can try. That needs an expiry mechanism on top of the lock.'},
+  ],
+};
+
+let cur = 0;
+const stepbar = document.getElementById('stepbar');
+steps.forEach((s,i)=>{
+  if(i){ const c=document.createElement('div'); c.className='conn'; stepbar.appendChild(c); }
+  const d=document.createElement('div'); d.className='dot'; d.textContent=s.req; d.onclick=()=>goToStep(i);
+  stepbar.appendChild(d);
+});
+function goToStep(i){ cur=i; renderStep(); showTab('design'); }
+function renderStep(){
+  const s = steps[cur];
+  document.getElementById('stepReq').innerHTML = `<h3 style="margin:0;">📌 ${s.label}</h3>`;
+  document.getElementById('stepWhy').innerHTML = `<b>Why:</b> ${s.why}`;
+  document.getElementById('stepChips').innerHTML = s.chips.map(c=>{
+    const isNew = s.newChips.some(n=>c.includes(n)) || s.newChips.includes(c);
+    return `<span class="chip ${isNew?'new':''}">${isNew?'+ ':''}${c}</span>`;
+  }).join('');
+  document.getElementById('stepCode').innerHTML = code(s.code);
+  const qs = qaByReq[s.req] || [];
+  document.getElementById('stepQA').innerHTML = qs.length ? (
+    '<div class="qawrap"><div class="qatitle">🎤 Interviewer might ask…</div>' +
+    qs.map(x=>`<details class="qa"><summary><span class="q">Q.</span>${x.q}</summary><div class="ans">${x.a}</div></details>`).join('') +
+    '</div>'
+  ) : '';
+  document.querySelectorAll('#stepbar .dot').forEach((d,i)=>{
+    d.classList.toggle('active', i===cur);
+    d.classList.toggle('done', i<cur);
+  });
+  document.getElementById('prevBtn').disabled = cur===0;
+  document.getElementById('nextBtn').textContent = cur===steps.length-1 ? 'See final integration →' : 'Next requirement →';
+}
+document.getElementById('prevBtn').onclick = ()=>{ if(cur>0){cur--;renderStep();} };
+document.getElementById('nextBtn').onclick = ()=>{ if(cur<steps.length-1){cur++;renderStep();} else showTab('integration'); };
+renderStep();
+
+/* DRY RUN — seat map */
+function freshSeats(){
+  return [
+    {id:'A1',type:'REGULAR',price:200,by:null},
+    {id:'A2',type:'REGULAR',price:200,by:null},
+    {id:'A3',type:'REGULAR',price:200,by:null},
+    {id:'A4',type:'PREMIUM',price:350,by:null},
+    {id:'A5',type:'PREMIUM',price:350,by:null},
+  ];
+}
+let seatsState, dryStep=0;
+const dry = [
+  { narr:'A show with 5 seats — A1–A3 regular (₹200), A4–A5 premium (₹350). All free.',
+    log:{txt:'Show SH1 · Inception · 6:00 PM', cls:'sys'} },
+  { narr:'<b>Alice</b> books <b>A1, A2</b>. Both free → CONFIRMED, amount ₹400.',
+    log:{txt:'book(Alice, [A1,A2])  ->  CONFIRMED  ₹400', cls:'out'},
+    mut:st=>{ st.seats[0].by='Alice'; st.seats[1].by='Alice'; }, mark:{booked:['A1','A2']} },
+  { narr:'<b>Bob</b> tries <b>A2, A3</b>. A2 is already taken → the whole booking <b>FAILS</b> (no partial booking).',
+    log:{txt:'book(Bob, [A2,A3])  ->  ✗ FAILED (A2 taken)', cls:'warn'}, mark:{fail:['A2']} },
+  { narr:'Now the interesting bit: <b>Carol</b> and <b>Dave</b> both tap the last premium seat <b>A5</b> at the exact same moment.',
+    log:{txt:'-- Carol & Dave both call book(..., [A5]) --', cls:'sys'}, mark:{contest:['A5']} },
+  { narr:'<code>synchronized tryReserve</code> lets only <b>one</b> thread in first. <b>Carol wins</b> → A5 CONFIRMED (₹350).',
+    log:{txt:'book(Carol, [A5])  ->  CONFIRMED  ₹350', cls:'out'},
+    mut:st=>{ st.seats[4].by='Carol'; }, mark:{booked:['A5']} },
+  { narr:'<b>Dave</b>\'s thread runs next, sees A5 taken → <b>FAILED</b>. No double booking. ✅',
+    log:{txt:'book(Dave, [A5])   ->  ✗ FAILED (A5 taken)', cls:'warn'}, mark:{fail:['A5']} },
+];
+
+function renderSeats(mark){
+  mark = mark || {};
+  const wrap = document.getElementById('seatmap');
+  wrap.innerHTML = seatsState.seats.map(s=>{
+    let cls='seat';
+    if(s.by) cls+=' booked';
+    if((mark.contest||[]).includes(s.id)) cls+=' contest';
+    if((mark.fail||[]).includes(s.id)) cls+=' fail';
+    return `<div class="${cls}">
+      <div class="sid">${s.id}</div>
+      <div class="sp">${s.type==='PREMIUM'?'₹350':'₹200'}</div>
+      <div class="who">${s.by||''}</div>
+    </div>`;
+  }).join('');
+}
+function dryReset(){
+  dryStep=0; seatsState={seats:freshSeats()};
+  document.getElementById('console').innerHTML='<div class="ln sys">// console ready — press Next step ▶</div>';
+  document.getElementById('narr').innerHTML='Press <b>Next step ▶</b> to begin.';
+  document.getElementById('dryNext').disabled=false; document.getElementById('dryNext').textContent='Next step ▶';
+  renderSeats({});
+}
+function dryNext(){
+  if(dryStep>=dry.length) return;
+  const step = dry[dryStep];
+  if(step.mut) step.mut(seatsState);
+  renderSeats(step.mark||{});
+  document.getElementById('narr').innerHTML = step.narr;
+  const c=document.getElementById('console');
+  const ln=document.createElement('div'); ln.className='ln '+step.log.cls; ln.textContent='> '+step.log.txt;
+  c.appendChild(ln); c.scrollTop=c.scrollHeight;
+  dryStep++;
+  if(dryStep>=dry.length){
+    const done=document.createElement('div'); done.className='ln sys'; done.textContent='// dry run complete ✅';
+    c.appendChild(done);
+    document.getElementById('dryNext').disabled=true; document.getElementById('dryNext').textContent='Done ✓';
+  }
+}
+document.getElementById('dryNext').onclick=dryNext;
+document.getElementById('dryReset').onclick=dryReset;
+dryReset();
+</script>
+</body>
+</html>
