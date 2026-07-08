@@ -1,3 +1,5 @@
+package strategy;
+
 /**
  * Strategy: pick one algorithm from a family at runtime, and swap it freely
  * without changing the code that uses it.

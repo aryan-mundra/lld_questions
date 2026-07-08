@@ -1,3 +1,5 @@
+package observer;
+
 public class Subscriber implements Observer {
     private final String name;
 

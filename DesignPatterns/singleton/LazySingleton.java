@@ -1,3 +1,5 @@
+package singleton;
+
 /**
  * LAZY singleton: the instance is created only on the first getInstance() call.
  * + Not created until needed (saves resources).

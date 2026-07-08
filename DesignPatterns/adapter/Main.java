@@ -1,3 +1,5 @@
+package adapter;
+
 /**
  * Adapter: lets two incompatible interfaces work together. Our app only knows
  * PaymentGateway; the adapter quietly bridges it to the third-party PayPal.

@@ -1,3 +1,5 @@
+package builder;
+
 /**
  * Builder: construct an object step by step with readable, chainable calls,
  * instead of a giant constructor like new Burger("sesame", 2, true, false, ...).

@@ -1,3 +1,5 @@
+package decorator;
+
 /**
  * Base decorator: IS-A Coffee and HAS-A Coffee (the one it wraps).
  * That double relationship is what lets add-ons stack on top of each other.

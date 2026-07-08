@@ -1,3 +1,5 @@
+package observer;
+
 /**
  * Observer: when one object (the Channel) changes, all its dependents
  * (Subscribers) are notified automatically.

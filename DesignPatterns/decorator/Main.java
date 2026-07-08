@@ -1,3 +1,5 @@
+package decorator;
+
 /**
  * Decorator: attach extra behavior by wrapping an object in layers, each
  * sharing the same interface. Here we stack Milk and Sugar onto a Coffee.

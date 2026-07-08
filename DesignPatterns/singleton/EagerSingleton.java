@@ -1,3 +1,5 @@
+package singleton;
+
 /**
  * EAGER singleton: the single instance is created when the class loads.
  * + Simple and inherently thread-safe (created once by the JVM).

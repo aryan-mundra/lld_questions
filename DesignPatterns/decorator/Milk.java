@@ -1,3 +1,5 @@
+package decorator;
+
 public class Milk extends AddOn {
     public Milk(Coffee coffee) { super(coffee); }
     public String description() { return coffee.description() + " + Milk"; }

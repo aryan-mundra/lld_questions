@@ -1,3 +1,5 @@
+package builder;
+
 public class Main {
     public static void main(String[] args) {
         // read it top to bottom — only set what you care about

@@ -1,3 +1,5 @@
+package factory;
+
 /**
  * Factory: hides object creation behind one method. Callers ask for "circle"
  * and get a Shape back — they never call 'new Circle()' themselves, so adding

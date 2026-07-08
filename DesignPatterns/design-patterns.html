@@ -442,23 +442,24 @@ function overviewHtml(){
     <div class="card"><h3><span class="badge b-behavioral">Behavioral</span></h3>How objects <b>talk and share responsibility</b>.<br><span style="color:var(--muted);font-size:13.5px">Strategy, Observer</span></div>
     <div class="grp">All patterns at a glance</div>
     <table><thead><tr><th>Pattern</th><th>Type</th><th>In one line</th></tr></thead><tbody>${rows}</tbody></table>
-    <p style="color:var(--muted);font-size:13px;margin-top:14px;">Tip: each has a runnable <code>Main.java</code> in its folder — <span class="mono">cd &lt;pattern&gt; &amp;&amp; javac *.java &amp;&amp; java Main</span></p>
+    <p style="color:var(--muted);font-size:13px;margin-top:14px;">Tip: each pattern is its own package/folder with a runnable <code>Main.java</code>. From the <span class="mono">DesignPatterns/</span> folder run — <span class="mono">javac &lt;pattern&gt;/*.java &amp;&amp; java &lt;pattern&gt;.Main</span> &nbsp;(e.g. <span class="mono">javac factory/*.java &amp;&amp; java factory.Main</span>)</p>
   `;
 }
 
 function patternHtml(p){
   let codeSection = '';
   p.codes.forEach((c,idx)=>{
-    codeSection += `<div class="filetab">${p.codeLabels[idx]||'Code'}</div>` + codeBlock(c);
+    const src = `package ${p.id};\n\n` + c;   // every file starts with its package
+    codeSection += `<div class="filetab">${p.codeLabels[idx]||'Code'}</div>` + codeBlock(src);
   });
   return `
     <h2>${p.name} <span class="badge ${TB[p.type]}">${p.type}</span></h2>
     <p class="intent">${p.intent}</p>
     <div class="analogy">💡 <b>Analogy:</b> ${p.analogy}</div>
-    <div class="codelabel" style="margin-bottom:6px;">Each class lives in its own file →</div>
+    <div class="analogy" style="border-left-color:var(--blue);">📦 <b>All files below are in the <code>${p.id}</code> package</b> (same folder). Because they share a package, they see each other <b>by name — no import needed between them</b>. You only <code>import</code> to reach <i>other</i> packages (e.g. Observer's <code>Channel</code> imports <code>java.util.List</code>).</div>
     ${codeSection}
     <div class="filetab">Main.java</div>
-    ${codeBlock(p.usage)}
+    ${codeBlock(`package ${p.id};\n\n` + p.usage)}
     <div class="two">
       <div class="card"><h3>🔑 Key points</h3><ul>${p.points.map(x=>`<li>${x}</li>`).join('')}</ul></div>
       <div class="card"><h3>✅ Use when</h3><ul>${p.useWhen.map(x=>`<li>${x}</li>`).join('')}</ul>

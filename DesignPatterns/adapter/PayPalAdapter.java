@@ -1,3 +1,5 @@
+package adapter;
+
 /**
  * The Adapter: makes the incompatible PayPal class look like our PaymentGateway.
  * It implements our interface and translates the call (rupees -> dollars, and

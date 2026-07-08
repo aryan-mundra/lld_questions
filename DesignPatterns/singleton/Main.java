@@ -1,3 +1,5 @@
+package singleton;
+
 public class Main {
     public static void main(String[] args) {
         EagerSingleton e1 = EagerSingleton.getInstance();
