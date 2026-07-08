@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LRU Cache LLD — Learn by Building</title>
+<style>
+  :root{
+    --ink:#1f2937;--muted:#64748b;--line:#e2e8f0;--bg:#eef2f9;--panel:#ffffff;--panel2:#f1f5f9;
+    --blue:#2563eb;--green:#0ea371;--orange:#d97706;--purple:#7c5cff;--red:#e5484d;--yellow:#f5c518;
+    --codebg:#f8fafc;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+       background:linear-gradient(160deg,#f0f4fb 0%,#eef2f9 40%,#f3eefb 100%);background-attachment:fixed;
+       color:var(--ink);line-height:1.6;}
+  a{color:var(--blue);}
+  code,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;}
+
+  header{padding:22px 26px 0;max-width:1080px;margin:0 auto;}
+  h1{font-size:26px;margin:0 0 2px;}
+  .tagline{color:var(--muted);margin:0 0 16px;font-size:15px;}
+  nav{display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:0;}
+  nav button{background:none;border:none;color:var(--muted);font-size:14px;font-weight:600;padding:10px 14px;cursor:pointer;border-bottom:3px solid transparent;border-radius:6px 6px 0 0;}
+  nav button:hover{color:var(--ink);background:var(--panel);}
+  nav button.active{color:var(--blue);border-bottom-color:var(--blue);}
+  nav button .num{display:inline-block;width:20px;height:20px;line-height:20px;text-align:center;background:var(--panel2);border-radius:50%;font-size:12px;margin-right:6px;}
+  nav button.active .num{background:var(--blue);color:#fff;}
+
+  main{max-width:1080px;margin:0 auto;padding:24px 26px 80px;}
+  section{display:none;animation:fade .3s ease;}
+  section.active{display:block;}
+  @keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+
+  h2{font-size:22px;margin:0 0 4px;}
+  .hint{color:var(--muted);font-size:14.5px;margin:0 0 20px;}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin:14px 0;}
+  .card h3{margin:0 0 8px;font-size:17px;}
+  .pill{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;color:#fff;}
+  .p-actor{background:var(--purple);} .p-entity{background:var(--green);} .p-behavior{background:var(--orange);}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media(max-width:760px){.grid2{grid-template-columns:1fr;}}
+  ul{margin:8px 0;padding-left:20px;} li{margin:4px 0;}
+  .kbd{background:var(--panel2);border:1px solid var(--line);border-radius:5px;padding:1px 7px;font-size:12.5px;}
+
+  .req{display:flex;align-items:flex-start;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 15px;margin:8px 0;cursor:pointer;transition:.15s;}
+  .req:hover{border-color:var(--blue);transform:translateX(3px);}
+  .req .box{width:22px;height:22px;border-radius:6px;border:2px solid var(--line);flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;transition:.15s;}
+  .req.done .box{background:var(--green);border-color:var(--green);}
+  .req .tag{font-size:11px;font-weight:800;padding:2px 8px;border-radius:6px;color:#fff;margin-right:4px;}
+  .req.f .tag{background:var(--blue);} .req.nf .tag{background:var(--red);}
+  .req .txt{font-size:14.5px;}
+  .req .go{margin-left:auto;color:var(--blue);font-size:13px;font-weight:700;white-space:nowrap;align-self:center;}
+  .legend2{font-size:13px;color:var(--muted);margin:6px 0 16px;}
+
+  .stepbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+  .stepbar .dot{width:34px;height:34px;border-radius:9px;background:var(--panel2);color:var(--muted);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;cursor:pointer;transition:.15s;}
+  .stepbar .dot.active{background:var(--blue);color:#fff;border-color:var(--blue);}
+  .stepbar .dot.done{color:var(--green);border-color:var(--green);}
+  .stepbar .conn{flex:1;height:2px;background:var(--line);min-width:8px;}
+  .navbtns{display:flex;justify-content:space-between;margin-top:18px;gap:10px;}
+  .btn{background:var(--blue);color:#fff;border:none;border-radius:9px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;transition:.15s;}
+  .btn:hover{filter:brightness(1.1);} .btn:disabled{opacity:.35;cursor:default;}
+  .btn.ghost{background:var(--panel2);color:var(--ink);border:1px solid var(--line);}
+
+  .why{background:var(--panel2);border-left:3px solid var(--orange);border-radius:8px;padding:10px 14px;font-size:14px;margin:12px 0;}
+  .why b{color:var(--orange);}
+
+  .qawrap{margin:16px 0 4px;}
+  .qawrap .qatitle{font-size:12px;color:var(--muted);font-weight:700;letter-spacing:.05em;margin-bottom:8px;text-transform:uppercase;}
+  details.qa{background:var(--panel);border:1px solid var(--line);border-radius:9px;margin:7px 0;overflow:hidden;}
+  details.qa summary{cursor:pointer;padding:11px 15px;font-size:14.5px;font-weight:600;list-style:none;display:flex;gap:9px;align-items:flex-start;}
+  details.qa summary::-webkit-details-marker{display:none;}
+  details.qa summary .q{color:var(--blue);font-weight:800;flex-shrink:0;}
+  details.qa summary::after{content:"+";margin-left:auto;color:var(--muted);font-size:18px;line-height:1;font-weight:700;}
+  details.qa[open] summary::after{content:"–";}
+  details.qa summary:hover{background:var(--panel2);}
+  details.qa .ans{padding:2px 15px 13px 34px;font-size:14px;color:var(--ink);border-top:1px solid var(--line);}
+  details.qa .ans code{background:var(--panel2);padding:1px 5px;border-radius:4px;font-size:12.5px;}
+  .chips{margin:10px 0;}
+  .chip{display:inline-block;background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:3px 10px;font-size:12.5px;margin:3px 5px 3px 0;color:var(--muted);}
+  .chip.new{background:rgba(49,196,141,.15);border-color:var(--green);color:var(--green);font-weight:700;}
+
+  pre{background:var(--codebg);border:1px solid var(--line);border-radius:10px;padding:12px 14px;overflow:auto;font-size:13px;line-height:1.45;margin:10px 0;color:#111827;}
+  pre .cl{white-space:pre;padding-left:10px;box-shadow:inset 3px 0 0 transparent;}
+  pre .cl.new{box-shadow:inset 3px 0 0 #94a3b8;}
+  pre .cm{color:#98a2b3;}
+
+  .diagram{display:flex;flex-wrap:wrap;gap:16px;}
+  .umlbox{background:var(--panel);border:1px solid var(--line);border-radius:10px;min-width:190px;flex:1 1 190px;overflow:hidden;}
+  .umlbox .t{padding:8px 12px;font-weight:800;color:#fff;font-size:14px;}
+  .umlbox .sec{padding:8px 12px;font-size:12.5px;border-top:1px solid var(--line);}
+  .umlbox .sec .mono{color:var(--muted);display:block;}
+  .t-model{background:var(--green);} .t-service{background:var(--orange);} .t-enum{background:var(--purple);} .t-if{background:var(--blue);}
+  .rel{display:flex;gap:12px;align-items:flex-start;padding:8px 0;border-bottom:1px dashed var(--line);font-size:14px;}
+  .rel:last-child{border:none;} .rel .a{font-family:monospace;color:var(--blue);font-weight:800;min-width:58px;}
+
+  /* dry run: DLL */
+  .drywrap{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media(max-width:820px){.drywrap{grid-template-columns:1fr;}}
+  .panelbox{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;}
+  .boxtitle{font-size:12px;font-weight:800;letter-spacing:.05em;color:var(--muted);text-transform:uppercase;margin-bottom:12px;}
+  .dll{display:flex;align-items:center;gap:6px;overflow-x:auto;padding:8px 2px;min-height:74px;}
+  .endlbl{font-size:10px;font-weight:800;color:var(--muted);letter-spacing:.05em;flex:0 0 auto;}
+  .cnode{border:2px solid var(--line);border-radius:10px;background:var(--panel2);padding:8px 10px;text-align:center;min-width:60px;flex:0 0 auto;transition:.3s;}
+  .cnode .k{font-weight:800;font-size:15px;} .cnode .v{font-size:11px;color:var(--muted);}
+  .cnode.add{border-color:var(--green);background:rgba(14,163,113,.16);animation:pop .5s;}
+  .cnode.move{border-color:var(--blue);background:rgba(37,99,235,.16);animation:pop .5s;}
+  .arrow{color:var(--muted);flex:0 0 auto;font-size:13px;}
+  @keyframes pop{0%{transform:scale(.7);opacity:.3;}100%{transform:scale(1);opacity:1;}}
+  .maprow{margin-top:12px;font-size:12.5px;color:var(--muted);}
+  .maprow b{color:var(--ink);}
+  .cap{margin-top:6px;font-size:12.5px;color:var(--muted);}
+  .console{background:#0f172a;border:1px solid var(--line);border-radius:12px;padding:14px 16px;font-family:ui-monospace,monospace;font-size:13px;min-height:180px;}
+  .console .ln{padding:2px 0;opacity:0;animation:slidein .3s forwards;}
+  @keyframes slidein{to{opacity:1;}}
+  .console .in{color:#60a5fa;} .console .out{color:#34d399;} .console .warn{color:#f87171;} .console .sys{color:#94a3b8;}
+  .narr{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px 15px;margin-top:14px;font-size:14.5px;min-height:52px;}
+  .narr b{color:var(--orange);}
+
+  @media(max-width:600px){
+    header{padding:16px 14px 0;} main{padding:18px 14px 70px;}
+    h1{font-size:21px;} .tagline{font-size:13.5px;} h2{font-size:19px;} h3{font-size:16px;} .hint{font-size:13.5px;}
+    nav{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+    nav::-webkit-scrollbar{display:none;}
+    nav button{white-space:nowrap;padding:9px 11px;font-size:13px;flex:0 0 auto;}
+    nav button .num{width:18px;height:18px;font-size:11px;margin-right:5px;}
+    .card{padding:14px 15px;} .grid2{grid-template-columns:1fr;}
+    .stepbar{gap:6px;} .stepbar .conn{display:none;} .stepbar .dot{width:38px;height:38px;font-size:12px;}
+    pre{font-size:12px;padding:10px 12px;}
+    .navbtns{flex-direction:column;} .navbtns .btn{width:100%;}
+    .umlbox{flex:1 1 100%;min-width:0;}
+    .console{min-height:140px;font-size:12px;}
+    details.qa summary{font-size:13.5px;padding:10px 12px;} details.qa .ans{font-size:13px;padding:2px 12px 12px 28px;}
+    .req{padding:11px 12px;} .req .go{display:none;}
+  }
+  @media(max-width:380px){ .stepbar .dot{width:33px;height:33px;font-size:11px;} }
+</style>
+</head>
+<body>
+<header>
+  <h1>🗃️ LRU Cache — Low Level Design</h1>
+  <p class="tagline">Learn by building it the way an interviewer expects: understand → gather requirements → design one requirement at a time → integrate → dry run.</p>
+  <nav id="nav">
+    <button data-t="understand" class="active"><span class="num">1</span>Understand</button>
+    <button data-t="requirements"><span class="num">2</span>Requirements</button>
+    <button data-t="design"><span class="num">3</span>Incremental Design</button>
+    <button data-t="integration"><span class="num">4</span>Final Integration</button>
+    <button data-t="dryrun"><span class="num">5</span>Dry Run</button>
+  </nav>
+</header>
+
+<main>
+
+<!-- 1. UNDERSTAND -->
+<section id="understand" class="active">
+  <h2>1 · Understand the problem</h2>
+  <p class="hint">Before any code, say the problem out loud in plain English. Build intuition first.</p>
+
+  <div class="card">
+    <h3>📝 Problem statement</h3>
+    <p>Design a <b>fixed-capacity cache</b> with two operations: <code>get(key)</code> and <code>put(key, value)</code>. When the cache is full and a new key comes in, evict the <b>Least Recently Used</b> entry. Both operations must run in <b>O(1)</b> time.</p>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <h3><span class="pill p-actor">ACTORS</span> Who uses it?</h3>
+      <ul>
+        <li><b>Caller</b> — reads/writes key→value pairs fast.</li>
+        <li><b>Cache</b> — stores, tracks recency, evicts the LRU.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3><span class="pill p-entity">ENTITIES</span> What "things" exist?</h3>
+      <ul>
+        <li>The cache (capacity, get, put)</li>
+        <li>Entries: key → value</li>
+        <li>Recency order (MRU … LRU)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3><span class="pill p-behavior">BEHAVIOR</span> What happens? (the flow)</h3>
+    <p style="font-size:15px;" class="mono">get/put a key → mark it most-recently-used → if full on insert → drop the least-recently-used</p>
+    <p class="hint" style="margin:6px 0 0;">The whole challenge is doing "find it", "reorder it", and "evict the oldest" all in <b>O(1)</b>. That points straight at combining two data structures.</p>
+  </div>
+
+  <div class="card" style="border-color:var(--purple);background:rgba(124,92,255,.05);">
+    <h3>🧩 Design focus</h3>
+    <p><b>Data-structure design</b> (not a GoF pattern): a <b>HashMap</b> for O(1) lookup + a <b>Doubly Linked List</b> for O(1) reorder/evict. Together they give O(1) <code>get</code> and <code>put</code>. Built up in requirements <b>F4 → NF1</b>.</p>
+  </div>
+
+  <div class="card" style="border-color:var(--blue);">
+    👉 <b>Next:</b> open the <b>Requirements</b> tab and click each one to build the design piece by piece.
+  </div>
+</section>
+
+<!-- 2. REQUIREMENTS -->
+<section id="requirements">
+  <h2>2 · Gather requirements</h2>
+  <p class="hint">Split into <b style="color:var(--blue)">Functional</b> (what it must do) and <b style="color:var(--red)">Non-functional</b> (how well). Click a requirement to jump to its design step.</p>
+  <div class="legend2">Tip: label them F1, F2… so every class you create later can be traced back to a requirement.</div>
+  <div id="reqList"></div>
+</section>
+
+<!-- 3. INCREMENTAL DESIGN -->
+<section id="design">
+  <h2>3 · Design — one requirement at a time</h2>
+  <p class="hint">Each step adds <b>only</b> what's needed for that requirement. Newly added lines are marked with a bar on the left. The design grows; it never restarts.</p>
+
+  <div class="stepbar" id="stepbar"></div>
+  <div class="card" id="stepReq" style="border-color:var(--blue);"></div>
+  <div class="why" id="stepWhy"></div>
+  <div>
+    <div style="font-size:12px;color:var(--muted);font-weight:700;letter-spacing:.05em;margin-bottom:4px;">DESIGN SO FAR</div>
+    <div class="chips" id="stepChips"></div>
+  </div>
+  <div id="stepCode"></div>
+  <div id="stepQA"></div>
+
+  <div class="navbtns">
+    <button class="btn ghost" id="prevBtn">← Previous</button>
+    <button class="btn" id="nextBtn">Next requirement →</button>
+  </div>
+</section>
+
+<!-- 4. INTEGRATION -->
+<section id="integration">
+  <h2>4 · Final integration</h2>
+  <p class="hint">All pieces combined. Here's the class diagram, the two-structure design, and the flow.</p>
+
+  <h3 style="margin-top:18px;">📦 Class diagram</h3>
+  <div class="diagram">
+    <div class="umlbox"><div class="t t-model">Node&lt;K,V&gt;</div><div class="sec"><span class="mono">key, value</span><span class="mono">prev, next</span></div></div>
+    <div class="umlbox"><div class="t t-service">LRUCache&lt;K,V&gt;</div><div class="sec"><span class="mono">- capacity</span><span class="mono">- Map&lt;K, Node&gt;</span><span class="mono">- head, tail (sentinels)</span></div><div class="sec"><span class="mono">+ get(key) : V</span><span class="mono">+ put(key, value)</span></div></div>
+  </div>
+
+  <h3 style="margin-top:24px;">🧩 The two structures, working together</h3>
+  <div class="card mono" style="font-size:13px;line-height:1.8;">
+    HashMap:  { 1 → •, 3 → •, 4 → • }   <span class="cm">// key → node, O(1) find</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↓&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↓&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↓<br>
+    List:  head ⇄ [4=D] ⇄ [1=A] ⇄ [3=C] ⇄ tail<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(MRU)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(LRU)
+  </div>
+
+  <h3 style="margin-top:24px;">🔗 How each op stays O(1)</h3>
+  <div class="card">
+    <div class="rel"><span class="a">get</span><div>map lookup (O(1)) → unlink the node &amp; relink at front (O(1) pointer swaps).</div></div>
+    <div class="rel"><span class="a">put</span><div>map lookup (O(1)); if full, the LRU is always <code>tail.prev</code> — remove it in O(1); add new node at front (O(1)).</div></div>
+    <div class="rel"><span class="a">why 2</span><div>Map alone can't order by recency; a list alone can't find a key fast. Together: fast find <b>and</b> fast reorder.</div></div>
+  </div>
+
+  <h3 style="margin-top:24px;">🌊 End-to-end flow (put into a full cache)</h3>
+  <div class="card mono" style="font-size:14px;line-height:1.9;">
+    put(4, "D")  <span class="cm">// cache is full (cap 3)</span><br>
+    &nbsp;&nbsp;└─ key 4 not in map → need room<br>
+    &nbsp;&nbsp;└─ lru = tail.prev  → remove it from list + map  <span class="cm">// evict LRU</span><br>
+    &nbsp;&nbsp;└─ new Node(4,"D") → addToFront → map.put(4, node) 🗃️
+  </div>
+</section>
+
+<!-- 5. DRY RUN -->
+<section id="dryrun">
+  <h2>5 · Dry run</h2>
+  <p class="hint">A capacity-3 cache. Watch nodes move to the front on use, and the LRU get evicted when full. Use <span class="kbd">Next step ▶</span>.</p>
+
+  <div class="drywrap">
+    <div>
+      <div class="panelbox">
+        <div class="boxtitle">🗃️ Cache (front = most recently used)</div>
+        <div class="dll" id="dll"></div>
+        <div class="maprow" id="maprow"></div>
+        <div class="cap">capacity = 3</div>
+      </div>
+      <div class="narr" id="narr">Press <b>Next step ▶</b> to begin.</div>
+      <div class="navbtns">
+        <button class="btn ghost" id="dryReset">⟲ Reset</button>
+        <button class="btn" id="dryNext">Next step ▶</button>
+      </div>
+    </div>
+    <div class="console" id="console"></div>
+  </div>
+</section>
+
+</main>
+
+<script>
+document.getElementById('nav').addEventListener('click', e=>{
+  const b = e.target.closest('button'); if(!b) return; showTab(b.dataset.t);
+});
+function showTab(t){
+  document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active', x.dataset.t===t));
+  document.querySelectorAll('section').forEach(s=>s.classList.toggle('active', s.id===t));
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+/* REQUIREMENTS */
+const requirements = [
+  {id:'F1', kind:'f', text:'A fixed-capacity cache with get(key) and put(key, value).'},
+  {id:'F2', kind:'f', text:'get returns the value if present (hit) or null/miss if not.'},
+  {id:'F3', kind:'f', text:'When full, inserting a new key evicts the Least Recently Used entry.'},
+  {id:'F4', kind:'f', text:'Track recency — but the naive list approach makes get/put O(n).'},
+  {id:'NF1',kind:'nf',text:'get and put must be O(1): HashMap (fast find) + Doubly Linked List (fast reorder/evict).'},
+];
+const reqList = document.getElementById('reqList');
+requirements.forEach((r,i)=>{
+  const el = document.createElement('div');
+  el.className = 'req '+r.kind;
+  el.innerHTML = `<div class="box">✓</div><div class="txt"><span class="tag">${r.id}</span>${r.text}</div><span class="go">design this →</span>`;
+  el.onclick = ()=>{ el.classList.add('done'); goToStep(i); showTab('design'); };
+  reqList.appendChild(el);
+});
+
+/* CODE RENDERER */
+function code(str){
+  const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return '<pre>'+str.split('\n').map(line=>{
+    let isNew=false;
+    if(line.includes('[[')){ isNew=true; line=line.replace(/\[\[|\]\]/g,''); }
+    let h = esc(line)
+      .replace(/(\/\*[\s\S]*?\*\/)/g,'<span class="cm">$1</span>')
+      .replace(/(\/\/.*)$/,'<span class="cm">$1</span>');
+    if(!h) h='&nbsp;';
+    return '<div class="cl'+(isNew?' new':'')+'">'+h+'</div>';
+  }).join('')+'</pre>';
+}
+
+const steps = [
+  { req:'F1', label:'F1 · The API',
+    why:'Start with the shape: a generic cache with a capacity and the two operations. Generic <code>&lt;K,V&gt;</code> so it works for any key/value types.',
+    chips:['LRUCache<K,V>'], newChips:['LRUCache<K,V>'],
+    code:
+`[[class LRUCache<K, V> {]]
+[[    private final int capacity;]]
+
+[[    LRUCache(int capacity) {]]
+[[        this.capacity = capacity;]]
+[[    }]]
+
+[[    V get(K key) { /* return value or null */ }]]
+[[    void put(K key, V value) { /* insert/update, evict if full */ }]]
+[[}]]`
+  },
+  { req:'F2', label:'F2 · get = hit or miss',
+    why:'A lookup needs fast key access → a <b>HashMap</b>. On a hit return the value; on a miss return null.',
+    chips:['LRUCache<K,V>','Map (values)'], newChips:['Map (values)'],
+    code:
+`class LRUCache<K, V> {
+[[    private final Map<K, V> values = new HashMap<>();   // O(1) lookup]]
+
+    V get(K key) {
+[[        return values.get(key);   // value on hit, null on miss]]
+    }
+}`
+  },
+  { req:'F3', label:'F3 · Evict LRU when full',
+    why:'To evict the <b>least recently used</b>, we must track the order things were used. When a new key arrives and the cache is full, drop the oldest-used entry.',
+    chips:['...previous...','recency order','evict'], newChips:['recency order','evict'],
+    code:
+`// We need an ORDER of usage:  front = most recently used (MRU)
+//                              back  = least recently used (LRU)
+// get/put -> move the touched key to the front.
+// put when full -> remove the item at the back (the LRU).
+void put(K key, V value) {
+[[    if (isFull() && !contains(key)) {]]
+[[        evictLeastRecentlyUsed();   // remove the back / oldest]]
+[[    }]]
+    // ...store value, mark as most recently used...
+}`
+  },
+  { req:'F4', label:'F4 · Naive recency is O(n) (the problem)',
+    why:'A first attempt: keep an <code>ArrayList</code> of keys in recency order. It works — but moving a key to the front means <b>searching</b> and <b>shifting</b>, so every get/put is <b>O(n)</b>. Too slow for a cache.',
+    chips:['(naive — fixed in NF1)'], newChips:[],
+    code:
+`class LRUCache<K, V> {
+    Map<K, V> values = new HashMap<>();
+    List<K> order = new ArrayList<>();   // front = MRU
+
+    V get(K key) {
+        if (!values.containsKey(key)) return null;
+[[        order.remove(key);     // O(n): search + shift  ✗]]
+[[        order.add(0, key);     // O(n): shift everything ✗]]
+        return values.get(key);
+    }
+    // put has the same O(n) reordering problem.
+}`
+  },
+  { req:'NF1', label:'NF1 · O(1) with HashMap + Doubly Linked List',
+    why:'Store <b>key → Node</b> in the map (not key → value), and keep the nodes in a <b>doubly linked list</b>. Now find is O(1) (map), and unlink/relink is O(1) (pointer swaps). Dummy head/tail sentinels kill the edge cases.',
+    chips:['...previous...','Node<K,V>','doubly linked list','O(1) get/put'],
+    newChips:['Node<K,V>','doubly linked list','O(1) get/put'],
+    code:
+`[[class Node<K, V> { K key; V value; Node<K,V> prev, next; }]]
+
+class LRUCache<K, V> {
+[[    Map<K, Node<K,V>> map = new HashMap<>();   // key -> NODE now]]
+[[    Node<K,V> head, tail;                      // dummy MRU & LRU ends]]
+
+    V get(K key) {
+[[        Node<K,V> n = map.get(key);            // O(1)]]
+[[        if (n == null) return null;]]
+[[        moveToFront(n);                        // O(1) pointer swaps]]
+[[        return n.value;]]
+    }
+
+    void put(K key, V value) {
+[[        if (map.containsKey(key)) {]]
+[[            Node<K,V> n = map.get(key); n.value = value; moveToFront(n); return;]]
+[[        }]]
+[[        if (map.size() == capacity) {]]
+[[            Node<K,V> lru = tail.prev;         // LRU is always here]]
+[[            remove(lru); map.remove(lru.key);  // evict, O(1)]]
+[[        }]]
+[[        Node<K,V> n = new Node<>(key, value);]]
+[[        map.put(key, n); addToFront(n);]]
+    }
+[[    // remove / addToFront / moveToFront = a few pointer updates -> O(1)]]
+}`
+  },
+];
+
+const qaByReq = {
+  F1: [
+    {q:'Why make it generic (<K,V>) instead of, say, Integer keys?', a:'A cache is reusable infrastructure — it shouldn\'t care what you store. Generics give compile-time type safety for any key/value types without duplicating the class.'},
+    {q:'What should get() return on a miss?', a:'null (or an <code>Optional</code>) is typical. Some versions throw, but a miss is expected, not exceptional, so returning null/empty and letting the caller decide is cleaner.'},
+  ],
+  F2: [
+    {q:'Why a HashMap for the values?', a:'Lookups by key must be O(1). A HashMap gives average O(1) get/put by key, which is the baseline any cache needs before we even worry about recency.'},
+  ],
+  F3: [
+    {q:'What does "least recently used" actually mean?', a:'The entry that hasn\'t been read or written for the longest time. Every get/put refreshes an entry\'s recency; when space is needed, the one untouched longest is evicted.'},
+    {q:'Why evict on put, not on get?', a:'get never adds an entry, so it never needs to make room. Only put can push the cache over capacity, so eviction belongs there — right before inserting the new entry.'},
+  ],
+  F4: [
+    {q:'Why is the ArrayList approach O(n)?', a:'Moving a key to the front means finding it (a linear scan) and then shifting all elements after it. Both are O(n). Even if the map gives O(1) value access, the reordering dominates and ruins performance.'},
+    {q:'Would a singly linked list fix it?', a:'Partly — you can add/remove at the head in O(1), but to remove an arbitrary node (or the one before the tail) you need its predecessor, which a singly linked list can\'t give in O(1). That\'s why we need a DOUBLY linked list.'},
+  ],
+  NF1: [
+    {q:'Why store key → Node instead of key → value?', a:'Because we need to <i>reorder</i> that entry in O(1). Holding the Node lets us unlink it from its current spot and move it to the front with a few pointer changes — impossible if the map only knew the value.'},
+    {q:'What are the dummy head and tail for?', a:'Sentinels so the list is never empty and every real node always has a prev and next. That removes all the "is it the first/last node?" null checks from remove/add — fewer bugs, cleaner code.'},
+    {q:'Isn\'t there a built-in for this in Java?', a:'Yes — <code>LinkedHashMap</code> with <code>accessOrder=true</code> and an overridden <code>removeEldestEntry()</code> is an LRU in a few lines. Interviewers usually want the manual HashMap + DLL version to test that you understand the mechanics.'},
+    {q:'How would you make it thread-safe?', a:'Wrap get/put in a lock (or use a concurrent structure). Naively synchronizing everything serializes access; real caches (e.g. Caffeine) use striping/segmenting and clever eviction to keep concurrency high.'},
+  ],
+};
+
+let cur = 0;
+const stepbar = document.getElementById('stepbar');
+steps.forEach((s,i)=>{
+  if(i){ const c=document.createElement('div'); c.className='conn'; stepbar.appendChild(c); }
+  const d=document.createElement('div'); d.className='dot'; d.textContent=s.req; d.onclick=()=>goToStep(i);
+  stepbar.appendChild(d);
+});
+function goToStep(i){ cur=i; renderStep(); showTab('design'); }
+function renderStep(){
+  const s = steps[cur];
+  document.getElementById('stepReq').innerHTML = `<h3 style="margin:0;">📌 ${s.label}</h3>`;
+  document.getElementById('stepWhy').innerHTML = `<b>Why:</b> ${s.why}`;
+  document.getElementById('stepChips').innerHTML = s.chips.map(c=>{
+    const isNew = s.newChips.some(n=>c.includes(n)) || s.newChips.includes(c);
+    return `<span class="chip ${isNew?'new':''}">${isNew?'+ ':''}${c}</span>`;
+  }).join('');
+  document.getElementById('stepCode').innerHTML = code(s.code);
+  const qs = qaByReq[s.req] || [];
+  document.getElementById('stepQA').innerHTML = qs.length ? (
+    '<div class="qawrap"><div class="qatitle">🎤 Interviewer might ask…</div>' +
+    qs.map(x=>`<details class="qa"><summary><span class="q">Q.</span>${x.q}</summary><div class="ans">${x.a}</div></details>`).join('') +
+    '</div>'
+  ) : '';
+  document.querySelectorAll('#stepbar .dot').forEach((d,i)=>{
+    d.classList.toggle('active', i===cur);
+    d.classList.toggle('done', i<cur);
+  });
+  document.getElementById('prevBtn').disabled = cur===0;
+  document.getElementById('nextBtn').textContent = cur===steps.length-1 ? 'See final integration →' : 'Next requirement →';
+}
+document.getElementById('prevBtn').onclick = ()=>{ if(cur>0){cur--;renderStep();} };
+document.getElementById('nextBtn').onclick = ()=>{ if(cur<steps.length-1){cur++;renderStep();} else showTab('integration'); };
+renderStep();
+
+/* DRY RUN — doubly linked list */
+const CAP = 3;
+let list, dryStep=0;   // list[0] = MRU (front)
+const dry = [
+  { narr:'Empty capacity-3 cache. Front = most recently used, back = least recently used.',
+    log:{txt:'new LRUCache(3)', cls:'sys'} },
+  { narr:'<b>put(1, A)</b> — new key, add at the front.',
+    log:{txt:'put(1,A)', cls:'in'}, mut:l=>l.unshift({k:1,v:'A'}), flash:{k:1,t:'add'} },
+  { narr:'<b>put(2, B)</b> — add at the front. 1 shifts toward the back.',
+    log:{txt:'put(2,B)', cls:'in'}, mut:l=>l.unshift({k:2,v:'B'}), flash:{k:2,t:'add'} },
+  { narr:'<b>put(3, C)</b> — cache is now full: [3, 2, 1].',
+    log:{txt:'put(3,C)', cls:'in'}, mut:l=>l.unshift({k:3,v:'C'}), flash:{k:3,t:'add'} },
+  { narr:'<b>get(1) = A</b> — a hit. Key 1 was at the back; it moves to the FRONT (most recently used).',
+    log:{txt:'get(1) -> A   (move 1 to front)', cls:'out'},
+    mut:l=>{ const i=l.findIndex(n=>n.k===1); const [n]=l.splice(i,1); l.unshift(n); }, flash:{k:1,t:'move'} },
+  { narr:'<b>put(4, D)</b> — full! The LRU is at the back = key 2. Evict it, then add 4 at the front.',
+    log:{txt:'put(4,D) -> evict LRU (2=B), add 4', cls:'warn'},
+    mut:l=>{ l.pop(); l.unshift({k:4,v:'D'}); }, flash:{k:4,t:'add'} },
+  { narr:'<b>get(2) = null</b> — a miss. Key 2 was evicted a moment ago, so it\'s gone. ✅',
+    log:{txt:'get(2) -> null (was evicted)', cls:'warn'} },
+];
+
+function renderCache(flash){
+  flash = flash || {};
+  const dll = document.getElementById('dll');
+  let html = '<span class="endlbl">MRU →</span>';
+  if(list.length===0){
+    html += '<span style="color:var(--muted);font-size:13px;padding:0 8px;">(empty)</span>';
+  } else {
+    list.forEach((n,i)=>{
+      if(i>0) html += '<span class="arrow">⇄</span>';
+      let cls='cnode';
+      if(flash.k===n.k) cls += ' '+(flash.t||'add');
+      html += `<div class="${cls}"><div class="k">${n.k}</div><div class="v">${n.v}</div></div>`;
+    });
+  }
+  html += '<span class="endlbl">→ LRU</span>';
+  dll.innerHTML = html;
+  document.getElementById('maprow').innerHTML =
+    'HashMap keys: <b>{ ' + list.map(n=>n.k).join(', ') + ' }</b>';
+}
+function dryReset(){
+  dryStep=0; list=[];
+  document.getElementById('console').innerHTML='<div class="ln sys">// console ready — press Next step ▶</div>';
+  document.getElementById('narr').innerHTML='Press <b>Next step ▶</b> to begin.';
+  document.getElementById('dryNext').disabled=false; document.getElementById('dryNext').textContent='Next step ▶';
+  renderCache({});
+}
+function dryNext(){
+  if(dryStep>=dry.length) return;
+  const step = dry[dryStep];
+  if(step.mut) step.mut(list);
+  renderCache(step.flash||{});
+  document.getElementById('narr').innerHTML = step.narr;
+  const c=document.getElementById('console');
+  const ln=document.createElement('div'); ln.className='ln '+step.log.cls; ln.textContent='> '+step.log.txt;
+  c.appendChild(ln); c.scrollTop=c.scrollHeight;
+  dryStep++;
+  if(dryStep>=dry.length){
+    const done=document.createElement('div'); done.className='ln sys'; done.textContent='// dry run complete ✅';
+    c.appendChild(done);
+    document.getElementById('dryNext').disabled=true; document.getElementById('dryNext').textContent='Done ✓';
+  }
+}
+document.getElementById('dryNext').onclick=dryNext;
+document.getElementById('dryReset').onclick=dryReset;
+dryReset();
+</script>
+</body>
+</html>
