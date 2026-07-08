@@ -242,8 +242,8 @@
   <h3 style="margin-top:18px;">📦 Class diagram</h3>
   <div class="diagram">
     <div class="umlbox"><div class="t t-enum">«enum» Coin</div><div class="sec"><span class="mono">PENNY, NICKEL,</span><span class="mono">DIME, QUARTER (value)</span></div></div>
-    <div class="umlbox"><div class="t t-model">Product</div><div class="sec"><span class="mono">- code, name</span><span class="mono">- price</span></div></div>
-    <div class="umlbox"><div class="t t-model">Inventory</div><div class="sec"><span class="mono">- products, counts</span></div><div class="sec"><span class="mono">+ isAvailable(code)</span><span class="mono">+ reduceStock(code)</span></div></div>
+    <div class="umlbox"><div class="t t-model">Product</div><div class="sec"><span class="mono">- code, name</span><span class="mono">- price, count</span></div></div>
+    <div class="umlbox"><div class="t t-model">Inventory</div><div class="sec"><span class="mono">- products (Map)</span></div><div class="sec"><span class="mono">+ isAvailable(code)</span><span class="mono">+ reduceStock(code)</span></div></div>
     <div class="umlbox"><div class="t t-if">«interface» VendingMachineState</div><div class="sec"><span class="mono">+ insertCoin(c)</span><span class="mono">+ selectProduct(code)</span><span class="mono">+ dispense() / refund()</span></div><div class="sec"><span class="mono">↑ Idle, HasMoney, Dispense</span></div></div>
     <div class="umlbox"><div class="t t-service">VendingMachine «context»</div><div class="sec"><span class="mono">- currentState</span><span class="mono">- inventory, balance</span><span class="mono">- selectedProduct</span></div><div class="sec"><span class="mono">+ insertCoin / selectProduct</span><span class="mono">+ dispense / refund</span></div></div>
   </div>
@@ -354,26 +354,29 @@ function code(str){
 
 const steps = [
   { req:'F1', label:'F1 · Products with price + stock count',
-    why:'Two plain data classes. <b>Product</b> is what a slot sells (code/name/price). <b>Inventory</b> tracks how many of each are left, keyed by code so lookups on selection are instant.',
+    why:'Two plain data classes. <b>Product</b> is what a slot sells (code/name/price) and how many are left (<code>count</code>). <b>Inventory</b> is a single map keyed by code, so lookups on selection are instant and each item has one source of truth.',
     chips:['Product','Inventory'], newChips:['Product','Inventory'],
     code:
-`[[// Product = plain data holder: what it is and what it costs.]]
+`[[// Product = what it is, what it costs, AND how many remain.]]
 [[class Product {]]
 [[    String code;      // e.g. "A1"]]
 [[    String name;      // "Coke"]]
 [[    int price;        // in cents]]
+[[    int count;        // how many left in this slot]]
 [[}]]
 
-[[// Inventory = what's stocked and how many remain, keyed by code.]]
+[[// Inventory = ONE map (code -> Product). Count lives on the Product,]]
+[[// so there's a single source of truth per item - no parallel maps to sync.]]
 [[class Inventory {]]
 [[    Map<String, Product> products = new HashMap<>();]]
-[[    Map<String, Integer> counts   = new HashMap<>();]]
 
 [[    boolean isAvailable(String code) {]]
-[[        return counts.getOrDefault(code, 0) > 0;]]
+[[        Product p = products.get(code);]]
+[[        return p != null && p.count > 0;]]
 [[    }]]
 [[    void reduceStock(String code) {]]
-[[        counts.computeIfPresent(code, (k, qty) -> qty - 1);]]
+[[        Product p = products.get(code);]]
+[[        if (p != null && p.count > 0) p.count--;]]
 [[    }]]
 [[}]]`
   },
@@ -489,7 +492,8 @@ class VendingMachine {
 
 const qaByReq = {
   F1: [
-    {q:'Why keep products and counts in Maps keyed by code?', a:'Selection happens by code ("A1"), so a <code>Map</code> gives O(1) lookup and stock check. Keeping counts separate from the Product means the same Product definition can be reused and only the quantity changes.'},
+    {q:'Why a single Map keyed by code, with count inside Product?', a:'Selection happens by code ("A1"), so a <code>Map</code> gives O(1) lookup and stock check. Keeping <code>count</code> on the Product means one source of truth per item — a second parallel <code>Map&lt;code, count&gt;</code> could drift out of sync (a count with no product, or a product with no count), and every operation would have to remember to update both.'},
+    {q:'Doesn\'t putting mutable count on Product break "Product is a value object"?', a:'A fair concern: if Products were shared/cached catalog data, a changing count would corrupt every reference. Here each product lives in exactly one slot, so it\'s fine. If you wanted Product to stay immutable, the clean alternative is a <code>Slot</code>/<code>InventoryItem</code> wrapper holding a Product + its count — still one map.'},
     {q:'Why store price on Product, not somewhere central?', a:'Price is an intrinsic property of the product — it travels with it. Centralizing prices elsewhere would just add a second thing to keep in sync.'},
   ],
   F2: [
