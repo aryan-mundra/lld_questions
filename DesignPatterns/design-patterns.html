@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design Patterns — Quick Reference with Code</title>
+<style>
+  :root{
+    --ink:#1f2937;--muted:#64748b;--line:#e2e8f0;--bg:#eef2f9;--panel:#ffffff;--panel2:#f1f5f9;
+    --blue:#2563eb;--green:#0ea371;--orange:#d97706;--purple:#7c5cff;--red:#e5484d;--yellow:#f5c518;
+    --codebg:#f8fafc;
+    --creational:#7c5cff;--structural:#d97706;--behavioral:#2563eb;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+       background:linear-gradient(160deg,#f0f4fb 0%,#eef2f9 40%,#f3eefb 100%);background-attachment:fixed;
+       color:var(--ink);line-height:1.6;}
+  code,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;}
+
+  header{padding:22px 26px 0;max-width:1000px;margin:0 auto;}
+  h1{font-size:26px;margin:0 0 2px;}
+  .tagline{color:var(--muted);margin:0 0 16px;font-size:15px;}
+  nav{display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--line);}
+  nav button{background:none;border:none;color:var(--muted);font-size:13.5px;font-weight:600;padding:9px 12px;cursor:pointer;border-bottom:3px solid transparent;border-radius:6px 6px 0 0;}
+  nav button:hover{color:var(--ink);background:var(--panel);}
+  nav button.active{color:var(--blue);border-bottom-color:var(--blue);}
+
+  main{max-width:1000px;margin:0 auto;padding:24px 26px 80px;}
+  section{display:none;animation:fade .3s ease;}
+  section.active{display:block;}
+  @keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+
+  h2{font-size:23px;margin:0 0 6px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .badge{font-size:11px;font-weight:800;padding:3px 10px;border-radius:20px;color:#fff;letter-spacing:.03em;}
+  .b-creational{background:var(--creational);} .b-structural{background:var(--structural);} .b-behavioral{background:var(--behavioral);}
+  .intent{font-size:15.5px;color:var(--ink);margin:0 0 14px;}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:14px 0;}
+  .card h3{margin:0 0 8px;font-size:15px;}
+  .analogy{background:var(--panel2);border-left:3px solid var(--green);border-radius:8px;padding:10px 14px;font-size:14px;margin:0 0 14px;}
+  .analogy b{color:var(--green);}
+  ul{margin:6px 0;padding-left:20px;} li{margin:4px 0;font-size:14px;}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media(max-width:720px){.two{grid-template-columns:1fr;}}
+  .codelabel{font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;margin:14px 0 2px;}
+  pre{background:var(--codebg);border:1px solid var(--line);border-radius:10px;padding:12px 14px;overflow:auto;font-size:12.5px;line-height:1.5;margin:6px 0;color:#111827;}
+  pre .cm{color:#98a2b3;}
+  .run{background:#0f172a;color:#cbd5e1;border-radius:8px;padding:8px 12px;font-family:ui-monospace,monospace;font-size:12px;margin-top:6px;white-space:pre-wrap;}
+  .run .p{color:#64748b;}
+
+  /* overview table */
+  table{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;}
+  th,td{text-align:left;padding:11px 14px;font-size:14px;border-bottom:1px solid var(--line);}
+  th{background:var(--panel2);font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);}
+  tr:last-child td{border-bottom:none;}
+  td .badge{font-size:10px;}
+  .grp{font-weight:800;font-size:12px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin:22px 0 8px;}
+
+  @media(max-width:600px){
+    header{padding:16px 14px 0;} main{padding:18px 14px 70px;}
+    h1{font-size:20px;} h2{font-size:19px;}
+    nav{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;} nav::-webkit-scrollbar{display:none;}
+    nav button{white-space:nowrap;flex:0 0 auto;}
+    th,td{padding:9px 10px;font-size:13px;}
+    pre{font-size:12px;}
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>🧠 Design Patterns — Quick Reference</h1>
+  <p class="tagline">Short, runnable Java examples for the patterns you're studying. Each has its type, a plain-English intent, an analogy, and the key points interviewers probe.</p>
+  <nav id="nav"></nav>
+</header>
+<main id="main"></main>
+
+<script>
+/* type -> badge class */
+const TB = { Creational:'b-creational', Structural:'b-structural', Behavioral:'b-behavioral' };
+
+const patterns = [
+  {
+    id:'overview', name:'Overview', overview:true
+  },
+  {
+    id:'singleton', name:'Singleton', type:'Creational',
+    intent:'Ensure a class has <b>only one instance</b> and give a global way to reach it.',
+    analogy:'A country has <b>one</b> government — everyone refers to the same one, and there\'s a single, well-known way to access it.',
+    codeLabels:['Eager (created at class load)','Lazy (created on first use)'],
+    codes:[
+`class EagerSingleton {
+    // created immediately when the class loads
+    private static final EagerSingleton INSTANCE = new EagerSingleton();
+    private EagerSingleton() { }              // private -> nobody can 'new' it
+    public static EagerSingleton getInstance() {
+        return INSTANCE;
+    }
+}`,
+`class LazySingleton {
+    private static LazySingleton instance;    // not created yet
+    private LazySingleton() { }
+    // synchronized -> thread-safe: two threads can't both create one
+    public static synchronized LazySingleton getInstance() {
+        if (instance == null) {               // create on first use only
+            instance = new LazySingleton();
+        }
+        return instance;
+    }
+}`],
+    usage:
+`EagerSingleton a = EagerSingleton.getInstance();
+EagerSingleton b = EagerSingleton.getInstance();
+System.out.println(a == b);   // true — same object`,
+    points:[
+      '<b>Eager:</b> simplest and thread-safe, but the instance is built even if never used.',
+      '<b>Lazy:</b> built only when first needed; must guard against two threads creating two copies (here via <code>synchronized</code>).',
+      'Faster lazy variants exist: <b>double-checked locking</b> (<code>volatile</code> + synchronized block) or the <b>static holder</b> idiom.',
+      'The private constructor is what actually enforces "only one".'
+    ],
+    useWhen:['Exactly one shared resource: config, logger, DB connection pool, cache.'],
+    watch:'Overusing it creates hidden global state that\'s hard to test — inject it where you can.'
+  },
+  {
+    id:'factory', name:'Factory', type:'Creational',
+    intent:'Create objects through a <b>single method</b> instead of scattering <code>new</code> across the code; the caller asks for a type and gets back an interface.',
+    analogy:'You order a "pizza" at the counter — the kitchen decides which concrete pizza to make. You never touch the oven yourself.',
+    codeLabels:['The factory'],
+    codes:[
+`interface Shape { void draw(); }
+class Circle implements Shape { public void draw(){ System.out.println("Circle"); } }
+class Square implements Shape { public void draw(){ System.out.println("Square"); } }
+
+class ShapeFactory {
+    // one place that knows how to build shapes
+    static Shape create(String type) {
+        switch (type) {
+            case "circle": return new Circle();
+            case "square": return new Square();
+            default: throw new IllegalArgumentException(type);
+        }
+    }
+}`],
+    usage:
+`Shape s = ShapeFactory.create("circle");
+s.draw();   // Circle`,
+    points:[
+      'Callers depend on the <code>Shape</code> interface, not concrete classes.',
+      'Adding a new shape touches only the factory — not every caller.',
+      'Keeps <code>new</code> and construction logic in one spot.'
+    ],
+    useWhen:['Object creation is non-trivial or the concrete type is decided at runtime (e.g. from config/input).'],
+    watch:'If the switch grows huge, consider a registry/map of suppliers instead.'
+  },
+  {
+    id:'builder', name:'Builder', type:'Creational',
+    intent:'Build a complex object <b>step by step</b> with readable, chainable calls — avoiding giant constructors with many parameters.',
+    analogy:'Ordering a custom burger: you pick bun, patties, cheese one at a time, then say "done" — instead of memorising the order of 8 constructor arguments.',
+    codeLabels:['The builder'],
+    codes:[
+`class Burger {
+    private final String bun; private final int patties;
+    private final boolean cheese;
+    private Burger(Builder b){ bun=b.bun; patties=b.patties; cheese=b.cheese; }
+
+    static class Builder {
+        private String bun = "plain";      // defaults
+        private int patties = 1;
+        private boolean cheese = false;
+        Builder bun(String b){ this.bun=b; return this; }       // return this
+        Builder patties(int n){ this.patties=n; return this; }  // -> chaining
+        Builder cheese(boolean c){ this.cheese=c; return this; }
+        Burger build(){ return new Burger(this); }
+    }
+}`],
+    usage:
+`Burger b = new Burger.Builder()
+        .bun("sesame")
+        .patties(2)
+        .cheese(true)
+        .build();`,
+    points:[
+      'Each setter returns <code>this</code>, so calls chain fluently.',
+      'Great when there are many optional fields — no "telescoping" constructors.',
+      'The object can be made immutable (all <code>final</code>), set once in <code>build()</code>.'
+    ],
+    useWhen:['A class has lots of optional/parameter-heavy fields, or you want an immutable object built in steps.'],
+    watch:'Overkill for objects with 1–2 fields — a plain constructor is fine there.'
+  },
+  {
+    id:'strategy', name:'Strategy', type:'Behavioral',
+    intent:'Define a family of interchangeable algorithms behind one interface, and <b>swap which one you use at runtime</b>.',
+    analogy:'Google Maps offers routes by car, walking, or transit. You pick one; the app plugs in that routing algorithm without changing the rest.',
+    codeLabels:['The strategy'],
+    codes:[
+`interface PaymentStrategy { void pay(int amount); }
+
+class UpiPayment implements PaymentStrategy {
+    public void pay(int amt){ System.out.println("Paid " + amt + " via UPI"); }
+}
+class CreditCardPayment implements PaymentStrategy {
+    public void pay(int amt){ System.out.println("Paid " + amt + " via Card"); }
+}`],
+    usage:
+`PaymentStrategy strategy = new UpiPayment();  // choose at runtime
+strategy.pay(500);
+strategy = new CreditCardPayment();           // swap freely
+strategy.pay(1200);`,
+    points:[
+      'The client holds a <code>PaymentStrategy</code> and doesn\'t care which concrete one it is.',
+      'Add a new algorithm = a new class; existing code is untouched (Open/Closed).',
+      'Replaces big <code>if/else</code> or <code>switch</code> over "which algorithm".'
+    ],
+    useWhen:['You have several ways to do one thing (pricing, sorting, routing, payment) and want to pick/swap them.'],
+    watch:'Strategy picks ONE algorithm. To STACK several, that\'s Decorator.'
+  },
+  {
+    id:'observer', name:'Observer', type:'Behavioral',
+    intent:'When one object changes, <b>all its dependents are notified automatically</b> (publish–subscribe).',
+    analogy:'A YouTube channel: when it uploads, every subscriber gets a notification. Subscribers can join or leave any time.',
+    codeLabels:['Subject + observers'],
+    codes:[
+`interface Observer { void update(String video); }
+
+class Subscriber implements Observer {
+    private final String name;
+    Subscriber(String n){ name=n; }
+    public void update(String v){ System.out.println(name + " got: " + v); }
+}
+
+class Channel {                         // the Subject
+    private final List<Observer> subs = new ArrayList<>();
+    void subscribe(Observer o){ subs.add(o); }
+    void unsubscribe(Observer o){ subs.remove(o); }
+    void upload(String video){
+        for (Observer o : subs) o.update(video);   // notify everyone
+    }
+}`],
+    usage:
+`Channel c = new Channel();
+c.subscribe(new Subscriber("Alice"));
+c.subscribe(new Subscriber("Bob"));
+c.upload("New video!");   // both Alice and Bob are notified`,
+    points:[
+      'The subject knows only the <code>Observer</code> interface — loose coupling.',
+      'Observers can subscribe/unsubscribe at runtime.',
+      'One change fans out to many listeners automatically.'
+    ],
+    useWhen:['Many objects must react to one object\'s changes: UI events, notifications, live dashboards.'],
+    watch:'Forgetting to unsubscribe can leak memory; notification order isn\'t guaranteed.'
+  },
+  {
+    id:'adapter', name:'Adapter', type:'Structural',
+    intent:'Make two <b>incompatible interfaces work together</b> by wrapping one so it looks like the other.',
+    analogy:'A travel plug adapter: your laptop charger (one shape) plugs into a foreign socket (another shape) through an adapter in between.',
+    codeLabels:['Target, adaptee, adapter'],
+    codes:[
+`interface PaymentGateway { void pay(int rupees); }   // what OUR app expects
+
+class ThirdPartyPayPal {                              // adaptee: can't change it
+    void sendDollars(double d){ System.out.println("PayPal $" + d); }
+}
+
+class PayPalAdapter implements PaymentGateway {       // the adapter
+    private final ThirdPartyPayPal paypal = new ThirdPartyPayPal();
+    public void pay(int rupees) {
+        paypal.sendDollars(rupees / 83.0);            // translate the call
+    }
+}`],
+    usage:
+`PaymentGateway gateway = new PayPalAdapter();  // app sees only its interface
+gateway.pay(830);   // -> PayPal $10.0`,
+    points:[
+      'The adapter implements the interface your code wants, and delegates to the incompatible class.',
+      'Lets you use legacy or third-party code without changing it (or your app).',
+      'It\'s about making existing things fit — not adding new behavior.'
+    ],
+    useWhen:['Integrating a library/legacy class whose interface doesn\'t match yours.'],
+    watch:'Adapter changes the interface; Decorator keeps the interface and adds behavior — don\'t confuse them.'
+  },
+  {
+    id:'decorator', name:'Decorator', type:'Structural',
+    intent:'Attach extra behavior to an object by <b>wrapping it in layers</b>, all sharing the same interface — stackable and order-sensitive.',
+    analogy:'A coffee: start with plain coffee, wrap it with milk, then sugar. Each wrapper adds to the description and the price.',
+    codeLabels:['Component + decorators'],
+    codes:[
+`interface Coffee { String desc(); double cost(); }
+
+class SimpleCoffee implements Coffee {          // base component
+    public String desc(){ return "Coffee"; }
+    public double cost(){ return 50; }
+}
+
+abstract class AddOn implements Coffee {        // IS-A Coffee AND HAS-A Coffee
+    protected final Coffee coffee;
+    AddOn(Coffee c){ this.coffee = c; }
+}
+class Milk extends AddOn {
+    Milk(Coffee c){ super(c); }
+    public String desc(){ return coffee.desc() + " + Milk"; }
+    public double cost(){ return coffee.cost() + 10; }
+}`],
+    usage:
+`Coffee c = new SimpleCoffee();  // 50
+c = new Milk(c);                 // 60
+c = new Sugar(c);               // 65
+System.out.println(c.desc() + " = " + c.cost());`,
+    points:[
+      'A decorator <b>is-a</b> and <b>has-a</b> the same interface — that\'s what lets them nest.',
+      'Stack any combination at runtime; no subclass explosion.',
+      'Wrapping order matters — each layer transforms the previous result.'
+    ],
+    useWhen:['You want to add optional, combinable features to an object (add-ons, charges, I/O streams).'],
+    watch:'Strategy swaps one algorithm; Decorator stacks many. Adapter changes interface; Decorator keeps it.'
+  },
+];
+
+/* ---- render ---- */
+const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function codeBlock(src){
+  return '<pre>'+src.split('\n').map(line=>{
+    return esc(line).replace(/(\/\/.*)$/,'<span class="cm">$1</span>');
+  }).join('\n')+'</pre>';
+}
+
+const nav = document.getElementById('nav');
+const mainEl = document.getElementById('main');
+
+patterns.forEach((p,i)=>{
+  const btn = document.createElement('button');
+  btn.textContent = p.name;
+  btn.dataset.id = p.id;
+  if(i===0) btn.classList.add('active');
+  btn.onclick = ()=>show(p.id);
+  nav.appendChild(btn);
+
+  const sec = document.createElement('section');
+  sec.id = p.id;
+  if(i===0) sec.classList.add('active');
+  sec.innerHTML = p.overview ? overviewHtml() : patternHtml(p);
+  mainEl.appendChild(sec);
+});
+
+function overviewHtml(){
+  const groups = {Creational:[], Structural:[], Behavioral:[]};
+  patterns.filter(p=>!p.overview).forEach(p=>groups[p.type].push(p));
+  let rows = '';
+  patterns.filter(p=>!p.overview).forEach(p=>{
+    rows += `<tr>
+      <td><b>${p.name}</b></td>
+      <td><span class="badge ${TB[p.type]}">${p.type}</span></td>
+      <td>${p.intent}</td></tr>`;
+  });
+  return `
+    <h2>Overview</h2>
+    <p class="intent">Design patterns are reusable solutions to common design problems. They fall into three families:</p>
+    <div class="two">
+      <div class="card"><h3><span class="badge b-creational">Creational</span></h3>How objects get <b>created</b>.<br><span style="color:var(--muted);font-size:13.5px">Singleton, Factory, Builder</span></div>
+      <div class="card"><h3><span class="badge b-structural">Structural</span></h3>How objects are <b>composed / connected</b>.<br><span style="color:var(--muted);font-size:13.5px">Adapter, Decorator</span></div>
+    </div>
+    <div class="card"><h3><span class="badge b-behavioral">Behavioral</span></h3>How objects <b>talk and share responsibility</b>.<br><span style="color:var(--muted);font-size:13.5px">Strategy, Observer</span></div>
+    <div class="grp">All patterns at a glance</div>
+    <table><thead><tr><th>Pattern</th><th>Type</th><th>In one line</th></tr></thead><tbody>${rows}</tbody></table>
+    <p style="color:var(--muted);font-size:13px;margin-top:14px;">Tip: each has a runnable <code>Main.java</code> in its folder — <span class="mono">cd &lt;pattern&gt; &amp;&amp; javac *.java &amp;&amp; java Main</span></p>
+  `;
+}
+
+function patternHtml(p){
+  let codeSection = '';
+  p.codes.forEach((c,idx)=>{
+    codeSection += `<div class="codelabel">${p.codeLabels[idx]||'Code'}</div>` + codeBlock(c);
+  });
+  return `
+    <h2>${p.name} <span class="badge ${TB[p.type]}">${p.type}</span></h2>
+    <p class="intent">${p.intent}</p>
+    <div class="analogy">💡 <b>Analogy:</b> ${p.analogy}</div>
+    ${codeSection}
+    <div class="codelabel">How you use it</div>
+    ${codeBlock(p.usage)}
+    <div class="two">
+      <div class="card"><h3>🔑 Key points</h3><ul>${p.points.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+      <div class="card"><h3>✅ Use when</h3><ul>${p.useWhen.map(x=>`<li>${x}</li>`).join('')}</ul>
+        <h3 style="margin-top:10px;">⚠️ Watch out</h3><p style="font-size:14px;margin:0;">${p.watch}</p></div>
+    </div>
+  `;
+}
+
+function show(id){
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active', b.dataset.id===id));
+  document.querySelectorAll('section').forEach(s=>s.classList.toggle('active', s.id===id));
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+</body>
+</html>
