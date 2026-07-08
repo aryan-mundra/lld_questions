@@ -5,10 +5,13 @@
  */
 public class ShapeFactory {
     public static Shape create(String type) {
-        switch (type.toLowerCase()) {
-            case "circle": return new Circle();
-            case "square": return new Square();
-            default: throw new IllegalArgumentException("Unknown shape: " + type);
+        String t = type.toLowerCase();
+        if (t.equals("circle")) {
+            return new Circle();
+        } else if (t.equals("square")) {
+            return new Square();
+        } else {
+            throw new IllegalArgumentException("Unknown shape: " + type);
         }
     }
 }

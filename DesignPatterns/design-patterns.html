@@ -132,10 +132,12 @@ class Square implements Shape { public void draw(){ System.out.println("Square")
 class ShapeFactory {
     // one place that knows how to build shapes
     static Shape create(String type) {
-        switch (type) {
-            case "circle": return new Circle();
-            case "square": return new Square();
-            default: throw new IllegalArgumentException(type);
+        if (type.equals("circle")) {
+            return new Circle();
+        } else if (type.equals("square")) {
+            return new Square();
+        } else {
+            throw new IllegalArgumentException(type);
         }
     }
 }`],
