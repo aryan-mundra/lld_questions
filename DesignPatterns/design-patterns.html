@@ -222,7 +222,33 @@ const patterns = [
       'The object can be made immutable (all <code>final</code>), set once in <code>build()</code>.'
     ],
     useWhen:['A class has lots of optional/parameter-heavy fields, or you want an immutable object built in steps.'],
-    watch:'Overkill for objects with 1–2 fields — a plain constructor is fine there.'
+    watch:'Overkill for objects with 1–2 fields — a plain constructor is fine there.',
+    without:{
+      title:'Same thing WITHOUT the Builder (plain getters/setters)',
+      code:
+`public class Burger {                       // mutable, plain setters
+    private String bun;
+    private int patties;
+    private boolean cheese;
+
+    public void setBun(String bun)      { this.bun = bun; }
+    public void setPatties(int p)       { this.patties = p; }
+    public void setCheese(boolean c)    { this.cheese = c; }
+}
+
+// usage
+Burger b = new Burger();     // an empty, incomplete burger exists right now
+b.setBun("sesame");
+b.setPatties(2);
+b.setCheese(true);           // works... but see the cons below`,
+      cons:[
+        '<b>Mutable forever:</b> anyone can change it later — <code>b.setPatties(99)</code> after it was "done".',
+        '<b>Half-built state:</b> right after <code>new Burger()</code> the object is incomplete/invalid (bun = null).',
+        '<b>Can\'t enforce required fields:</b> someone may forget <code>setBun()</code> and get a bun-less burger.',
+        '<b>No single validation point</b> before the object is created.',
+        'Fine for small, changeable objects — but the Builder gives an <b>immutable, always-complete, validated</b> object instead.'
+      ]
+    }
   },
   {
     id:'strategy', name:'Strategy', type:'Behavioral',
@@ -465,6 +491,13 @@ function patternHtml(p){
       <div class="card"><h3>✅ Use when</h3><ul>${p.useWhen.map(x=>`<li>${x}</li>`).join('')}</ul>
         <h3 style="margin-top:10px;">⚠️ Watch out</h3><p style="font-size:14px;margin:0;">${p.watch}</p></div>
     </div>
+    ${p.without ? `
+    <div class="card" style="border-color:var(--orange);">
+      <h3>🔁 ${p.without.title}</h3>
+      ${codeBlock(p.without.code)}
+      <p style="font-size:14px;font-weight:700;margin:10px 0 4px;color:var(--orange);">Cons of this approach:</p>
+      <ul>${p.without.cons.map(x=>`<li>${x}</li>`).join('')}</ul>
+    </div>` : ''}
   `;
 }
 
