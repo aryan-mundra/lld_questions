@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shopping Cart Engine LLD — Learn by Building</title>
+<style>
+  :root{
+    --ink:#1f2937;--muted:#64748b;--line:#e2e8f0;--bg:#eef2f9;--panel:#ffffff;--panel2:#f1f5f9;
+    --blue:#2563eb;--green:#0ea371;--orange:#d97706;--purple:#7c5cff;--red:#e5484d;--yellow:#f5c518;
+    --codebg:#f8fafc;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+       background:linear-gradient(160deg,#f0f4fb 0%,#eef2f9 40%,#f3eefb 100%);background-attachment:fixed;
+       color:var(--ink);line-height:1.6;}
+  a{color:var(--blue);}
+  code,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;}
+
+  header{padding:22px 26px 0;max-width:1080px;margin:0 auto;}
+  h1{font-size:26px;margin:0 0 2px;}
+  .tagline{color:var(--muted);margin:0 0 16px;font-size:15px;}
+  nav{display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:0;}
+  nav button{background:none;border:none;color:var(--muted);font-size:14px;font-weight:600;padding:10px 14px;cursor:pointer;border-bottom:3px solid transparent;border-radius:6px 6px 0 0;}
+  nav button:hover{color:var(--ink);background:var(--panel);}
+  nav button.active{color:var(--blue);border-bottom-color:var(--blue);}
+  nav button .num{display:inline-block;width:20px;height:20px;line-height:20px;text-align:center;background:var(--panel2);border-radius:50%;font-size:12px;margin-right:6px;}
+  nav button.active .num{background:var(--blue);color:#fff;}
+
+  main{max-width:1080px;margin:0 auto;padding:24px 26px 80px;}
+  section{display:none;animation:fade .3s ease;}
+  section.active{display:block;}
+  @keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+
+  h2{font-size:22px;margin:0 0 4px;}
+  .hint{color:var(--muted);font-size:14.5px;margin:0 0 20px;}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin:14px 0;}
+  .card h3{margin:0 0 8px;font-size:17px;}
+  .pill{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;color:#fff;}
+  .p-actor{background:var(--purple);} .p-entity{background:var(--green);} .p-behavior{background:var(--orange);}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media(max-width:760px){.grid2{grid-template-columns:1fr;}}
+  ul{margin:8px 0;padding-left:20px;} li{margin:4px 0;}
+  .kbd{background:var(--panel2);border:1px solid var(--line);border-radius:5px;padding:1px 7px;font-size:12.5px;}
+
+  .req{display:flex;align-items:flex-start;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 15px;margin:8px 0;cursor:pointer;transition:.15s;}
+  .req:hover{border-color:var(--blue);transform:translateX(3px);}
+  .req .box{width:22px;height:22px;border-radius:6px;border:2px solid var(--line);flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;transition:.15s;}
+  .req.done .box{background:var(--green);border-color:var(--green);}
+  .req .tag{font-size:11px;font-weight:800;padding:2px 8px;border-radius:6px;color:#fff;margin-right:4px;}
+  .req.f .tag{background:var(--blue);} .req.nf .tag{background:var(--red);}
+  .req .txt{font-size:14.5px;}
+  .req .go{margin-left:auto;color:var(--blue);font-size:13px;font-weight:700;white-space:nowrap;align-self:center;}
+  .legend2{font-size:13px;color:var(--muted);margin:6px 0 16px;}
+
+  .stepbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+  .stepbar .dot{width:34px;height:34px;border-radius:9px;background:var(--panel2);color:var(--muted);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;cursor:pointer;transition:.15s;}
+  .stepbar .dot.active{background:var(--blue);color:#fff;border-color:var(--blue);}
+  .stepbar .dot.done{color:var(--green);border-color:var(--green);}
+  .stepbar .conn{flex:1;height:2px;background:var(--line);min-width:8px;}
+  .navbtns{display:flex;justify-content:space-between;margin-top:18px;gap:10px;}
+  .btn{background:var(--blue);color:#fff;border:none;border-radius:9px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;transition:.15s;}
+  .btn:hover{filter:brightness(1.1);} .btn:disabled{opacity:.35;cursor:default;}
+  .btn.ghost{background:var(--panel2);color:var(--ink);border:1px solid var(--line);}
+
+  .why{background:var(--panel2);border-left:3px solid var(--orange);border-radius:8px;padding:10px 14px;font-size:14px;margin:12px 0;}
+  .why b{color:var(--orange);}
+
+  .qawrap{margin:16px 0 4px;}
+  .qawrap .qatitle{font-size:12px;color:var(--muted);font-weight:700;letter-spacing:.05em;margin-bottom:8px;text-transform:uppercase;}
+  details.qa{background:var(--panel);border:1px solid var(--line);border-radius:9px;margin:7px 0;overflow:hidden;}
+  details.qa summary{cursor:pointer;padding:11px 15px;font-size:14.5px;font-weight:600;list-style:none;display:flex;gap:9px;align-items:flex-start;}
+  details.qa summary::-webkit-details-marker{display:none;}
+  details.qa summary .q{color:var(--blue);font-weight:800;flex-shrink:0;}
+  details.qa summary::after{content:"+";margin-left:auto;color:var(--muted);font-size:18px;line-height:1;font-weight:700;}
+  details.qa[open] summary::after{content:"–";}
+  details.qa summary:hover{background:var(--panel2);}
+  details.qa .ans{padding:2px 15px 13px 34px;font-size:14px;color:var(--ink);border-top:1px solid var(--line);}
+  details.qa .ans code{background:var(--panel2);padding:1px 5px;border-radius:4px;font-size:12.5px;}
+  .chips{margin:10px 0;}
+  .chip{display:inline-block;background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:3px 10px;font-size:12.5px;margin:3px 5px 3px 0;color:var(--muted);}
+  .chip.new{background:rgba(49,196,141,.15);border-color:var(--green);color:var(--green);font-weight:700;}
+
+  pre{background:var(--codebg);border:1px solid var(--line);border-radius:10px;padding:12px 14px;overflow:auto;font-size:13px;line-height:1.45;margin:10px 0;color:#111827;}
+  pre .cl{white-space:pre;padding-left:10px;box-shadow:inset 3px 0 0 transparent;}
+  pre .cl.new{box-shadow:inset 3px 0 0 #94a3b8;}
+  pre .cm{color:#98a2b3;}
+
+  .diagram{display:flex;flex-wrap:wrap;gap:16px;}
+  .umlbox{background:var(--panel);border:1px solid var(--line);border-radius:10px;min-width:190px;flex:1 1 190px;overflow:hidden;}
+  .umlbox .t{padding:8px 12px;font-weight:800;color:#fff;font-size:14px;}
+  .umlbox .sec{padding:8px 12px;font-size:12.5px;border-top:1px solid var(--line);}
+  .umlbox .sec .mono{color:var(--muted);display:block;}
+  .t-model{background:var(--green);} .t-service{background:var(--orange);} .t-enum{background:var(--purple);} .t-if{background:var(--blue);}
+  .rel{display:flex;gap:12px;align-items:flex-start;padding:8px 0;border-bottom:1px dashed var(--line);font-size:14px;}
+  .rel:last-child{border:none;} .rel .a{font-family:monospace;color:var(--blue);font-weight:800;min-width:58px;}
+
+  /* decorator onion diagram */
+  .onion{padding:6px;}
+  .layer{border:2px solid var(--line);border-radius:10px;padding:10px 12px;margin:0;font-size:13.5px;font-weight:700;}
+  .layer .lbl{color:var(--ink);}
+  .l1{border-color:#c7d2fe;background:#eef2ff;}
+  .l2{border-color:#bbf7d0;background:#f0fdf4;}
+  .l3{border-color:#fde68a;background:#fffbeb;}
+  .l4{border-color:#fecaca;background:#fef2f2;}
+  .l5{border-color:#ddd6fe;background:#faf5ff;}
+
+  /* dry run */
+  .drywrap{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media(max-width:820px){.drywrap{grid-template-columns:1fr;}}
+  .panelbox{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;}
+  .boxtitle{font-size:12px;font-weight:800;letter-spacing:.05em;color:var(--muted);text-transform:uppercase;margin-bottom:10px;}
+  .item{display:flex;justify-content:space-between;padding:7px 10px;border:1px solid var(--line);border-radius:8px;margin-bottom:6px;font-size:13.5px;background:var(--panel2);}
+  .item.flash{animation:flash .7s ease;}
+  @keyframes flash{0%{transform:scale(1);}45%{transform:scale(1.03);box-shadow:0 0 0 3px rgba(37,99,235,.3);}100%{transform:scale(1);}}
+  .subtotal{display:flex;justify-content:space-between;font-weight:800;margin-top:8px;padding-top:8px;border-top:2px solid var(--line);font-size:15px;}
+  .lay{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);border-radius:8px;padding:9px 12px;margin-bottom:6px;font-size:13.5px;background:#fff;}
+  .lay.flash{animation:flash .7s ease;border-color:var(--blue);}
+  .lay .op{font-weight:700;}
+  .lay .amt{font-family:ui-monospace,monospace;font-weight:800;}
+  .lay.total{background:rgba(14,163,113,.10);border-color:var(--green);}
+  .lay.total .amt{color:var(--green);}
+  .console{background:#0f172a;border:1px solid var(--line);border-radius:12px;padding:14px 16px;font-family:ui-monospace,monospace;font-size:13px;min-height:180px;}
+  .console .ln{padding:2px 0;opacity:0;animation:slidein .3s forwards;}
+  @keyframes slidein{to{opacity:1;}}
+  .console .in{color:#60a5fa;} .console .out{color:#34d399;} .console .warn{color:#f87171;} .console .sys{color:#94a3b8;}
+  .narr{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px 15px;margin-top:14px;font-size:14.5px;min-height:52px;}
+  .narr b{color:var(--orange);}
+
+  @media(max-width:600px){
+    header{padding:16px 14px 0;} main{padding:18px 14px 70px;}
+    h1{font-size:21px;} .tagline{font-size:13.5px;} h2{font-size:19px;} h3{font-size:16px;} .hint{font-size:13.5px;}
+    nav{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+    nav::-webkit-scrollbar{display:none;}
+    nav button{white-space:nowrap;padding:9px 11px;font-size:13px;flex:0 0 auto;}
+    nav button .num{width:18px;height:18px;font-size:11px;margin-right:5px;}
+    .card{padding:14px 15px;} .grid2{grid-template-columns:1fr;}
+    .stepbar{gap:6px;} .stepbar .conn{display:none;} .stepbar .dot{width:38px;height:38px;font-size:12px;}
+    pre{font-size:12px;padding:10px 12px;}
+    .navbtns{flex-direction:column;} .navbtns .btn{width:100%;}
+    .umlbox{flex:1 1 100%;min-width:0;}
+    .console{min-height:140px;font-size:12px;}
+    details.qa summary{font-size:13.5px;padding:10px 12px;} details.qa .ans{font-size:13px;padding:2px 12px 12px 28px;}
+    .req{padding:11px 12px;} .req .go{display:none;}
+  }
+  @media(max-width:380px){ .stepbar .dot{width:33px;height:33px;font-size:11px;} }
+</style>
+</head>
+<body>
+<header>
+  <h1>🛒 Shopping Cart Engine — Low Level Design</h1>
+  <p class="tagline">Learn by building it the way an interviewer expects: understand → gather requirements → design one requirement at a time → integrate → dry run.</p>
+  <nav id="nav">
+    <button data-t="understand" class="active"><span class="num">1</span>Understand</button>
+    <button data-t="requirements"><span class="num">2</span>Requirements</button>
+    <button data-t="design"><span class="num">3</span>Incremental Design</button>
+    <button data-t="integration"><span class="num">4</span>Final Integration</button>
+    <button data-t="dryrun"><span class="num">5</span>Dry Run</button>
+  </nav>
+</header>
+
+<main>
+
+<!-- 1. UNDERSTAND -->
+<section id="understand" class="active">
+  <h2>1 · Understand the problem</h2>
+  <p class="hint">Before any code, say the problem out loud in plain English. Build intuition first.</p>
+
+  <div class="card">
+    <h3>📝 Problem statement</h3>
+    <p>Design the engine behind an online <b>shopping cart</b>. A shopper adds products (with quantities), can change or remove them, and sees a running total. At checkout the price gets adjusted by a <b>stack of charges and discounts</b> — member discount, tax, coupons, gift wrap — applied in a specific order. New offer types get added all the time, so the pricing must be easy to extend.</p>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <h3><span class="pill p-actor">ACTORS</span> Who uses it?</h3>
+      <ul>
+        <li><b>Shopper</b> — adds/updates items, applies coupons, checks out.</li>
+        <li><b>Engine</b> — tracks items, computes subtotal &amp; final price.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3><span class="pill p-entity">ENTITIES</span> What "things" exist?</h3>
+      <ul>
+        <li>Product, CartItem, ShoppingCart</li>
+        <li>Bill (subtotal)</li>
+        <li>Charges: tax, coupon, discount, gift wrap</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3><span class="pill p-behavior">BEHAVIOR</span> What happens? (the flow)</h3>
+    <p style="font-size:15px;" class="mono">add items → subtotal → apply discount → +tax → −coupon → +gift wrap → final total</p>
+    <p class="hint" style="margin:6px 0 0;">The charges <b>stack</b> on top of each other, each transforming the running amount. That "wrap the price in layer after layer" shape points straight at the <b>Decorator pattern</b>.</p>
+  </div>
+
+  <div class="card" style="border-color:var(--purple);background:rgba(124,92,255,.05);">
+    <h3>🧩 Design pattern in focus</h3>
+    <p><b>Decorator pattern</b> — each charge/discount is a wrapper that takes a <code>Bill</code> and returns a <code>Bill</code>, adjusting the amount. Stack them in any order; add new charge types without touching the cart or existing charges. You'll build it in requirement <b>NF1</b>.</p>
+  </div>
+
+  <div class="card" style="border-color:var(--blue);">
+    👉 <b>Next:</b> open the <b>Requirements</b> tab and click each one to build the design piece by piece.
+  </div>
+</section>
+
+<!-- 2. REQUIREMENTS -->
+<section id="requirements">
+  <h2>2 · Gather requirements</h2>
+  <p class="hint">Split into <b style="color:var(--blue)">Functional</b> (what it must do) and <b style="color:var(--red)">Non-functional</b> (how well). Click a requirement to jump to its design step.</p>
+  <div class="legend2">Tip: label them F1, F2… so every class you create later can be traced back to a requirement.</div>
+  <div id="reqList"></div>
+</section>
+
+<!-- 3. INCREMENTAL DESIGN -->
+<section id="design">
+  <h2>3 · Design — one requirement at a time</h2>
+  <p class="hint">Each step adds <b>only</b> what's needed for that requirement. Newly added lines are marked with a bar on the left. The design grows; it never restarts.</p>
+
+  <div class="stepbar" id="stepbar"></div>
+  <div class="card" id="stepReq" style="border-color:var(--blue);"></div>
+  <div class="why" id="stepWhy"></div>
+  <div>
+    <div style="font-size:12px;color:var(--muted);font-weight:700;letter-spacing:.05em;margin-bottom:4px;">DESIGN SO FAR</div>
+    <div class="chips" id="stepChips"></div>
+  </div>
+  <div id="stepCode"></div>
+  <div id="stepQA"></div>
+
+  <div class="navbtns">
+    <button class="btn ghost" id="prevBtn">← Previous</button>
+    <button class="btn" id="nextBtn">Next requirement →</button>
+  </div>
+</section>
+
+<!-- 4. INTEGRATION -->
+<section id="integration">
+  <h2>4 · Final integration</h2>
+  <p class="hint">All pieces combined. Here's the class diagram, the Decorator "onion", relationships, and the flow.</p>
+
+  <h3 style="margin-top:18px;">📦 Class diagram</h3>
+  <div class="diagram">
+    <div class="umlbox"><div class="t t-model">Product</div><div class="sec"><span class="mono">- id, name, price</span></div></div>
+    <div class="umlbox"><div class="t t-model">CartItem</div><div class="sec"><span class="mono">- product, quantity</span></div><div class="sec"><span class="mono">+ getTotalPrice()</span></div></div>
+    <div class="umlbox"><div class="t t-model">ShoppingCart</div><div class="sec"><span class="mono">- Map&lt;id, CartItem&gt;</span></div><div class="sec"><span class="mono">+ add/remove/update</span><span class="mono">+ getSubtotal()</span></div></div>
+    <div class="umlbox"><div class="t t-if">«interface» Bill</div><div class="sec"><span class="mono">+ getAmount()</span><span class="mono">+ getDescription()</span></div><div class="sec"><span class="mono">↑ CartBill, BillDecorator</span></div></div>
+    <div class="umlbox"><div class="t t-service">CartBill</div><div class="sec"><span class="mono">- cart</span></div><div class="sec"><span class="mono">getAmount()=subtotal</span></div></div>
+    <div class="umlbox"><div class="t t-service">BillDecorator «abstract»</div><div class="sec"><span class="mono">- wrapped : Bill</span></div><div class="sec"><span class="mono">↑ Tax, Discount,</span><span class="mono">&nbsp;&nbsp;Coupon, GiftWrap</span></div></div>
+  </div>
+
+  <h3 style="margin-top:24px;">🧅 The Decorator "onion" (why order matters)</h3>
+  <div class="card">
+    <div class="onion">
+      <div class="layer l5"><span class="lbl">GiftWrap +₹30</span>
+        <div class="layer l4" style="margin-top:8px;"><span class="lbl">Coupon −₹50</span>
+          <div class="layer l3" style="margin-top:8px;"><span class="lbl">Tax +8%</span>
+            <div class="layer l2" style="margin-top:8px;"><span class="lbl">Discount −10%</span>
+              <div class="layer l1" style="margin-top:8px;"><span class="lbl">CartBill → Subtotal</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="hint" style="margin:12px 0 0;">Each layer calls the one inside it, then applies its own twist. Read outward: total = giftWrap( coupon( tax( discount( subtotal ) ) ) ). Re-order the wrapping → different total.</p>
+  </div>
+
+  <h3 style="margin-top:24px;">🔗 Relationships (in plain words)</h3>
+  <div class="card">
+    <div class="rel"><span class="a">──▷</span><div><b>IS-A:</b> CartBill and every decorator <i>is a</i> Bill. Tax/Discount/Coupon/GiftWrap <i>is a</i> BillDecorator.</div></div>
+    <div class="rel"><span class="a">◇──</span><div><b>HAS-A (wraps):</b> a BillDecorator holds the Bill it decorates — the recursive core of the pattern (IS-A <i>and</i> HAS-A the same type).</div></div>
+    <div class="rel"><span class="a">◆──</span><div><b>OWNS:</b> ShoppingCart owns its CartItems; CartBill reads the cart's subtotal live.</div></div>
+  </div>
+
+  <h3 style="margin-top:24px;">🌊 End-to-end flow</h3>
+  <div class="card mono" style="font-size:14px;line-height:1.9;">
+    Bill bill = new CartBill(cart);           <span class="cm">// ₹460</span><br>
+    bill = new DiscountDecorator(bill, 10);   <span class="cm">// ₹414</span><br>
+    bill = new TaxDecorator(bill, 8);         <span class="cm">// ₹447.12</span><br>
+    bill = new CouponDecorator(bill, 50);     <span class="cm">// ₹397.12</span><br>
+    bill = new GiftWrapDecorator(bill, 30);   <span class="cm">// ₹427.12</span><br>
+    bill.getAmount();  <span class="cm">// each layer calls the one it wraps 🛒</span>
+  </div>
+</section>
+
+<!-- 5. DRY RUN -->
+<section id="dryrun">
+  <h2>5 · Dry run</h2>
+  <p class="hint">Fill the cart, then stack the charges layer by layer and watch the running total change. Use <span class="kbd">Next step ▶</span>.</p>
+
+  <div class="drywrap">
+    <div>
+      <div class="panelbox">
+        <div class="boxtitle">🛒 Cart</div>
+        <div id="cart"></div>
+        <div class="subtotal"><span>Subtotal</span><span id="subtotal">₹0.00</span></div>
+      </div>
+      <div class="panelbox" style="margin-top:14px;">
+        <div class="boxtitle">💸 Price pipeline (decorators)</div>
+        <div id="pipeline"><div class="hint" style="margin:0;">No charges applied yet.</div></div>
+      </div>
+      <div class="narr" id="narr">Press <b>Next step ▶</b> to begin.</div>
+      <div class="navbtns">
+        <button class="btn ghost" id="dryReset">⟲ Reset</button>
+        <button class="btn" id="dryNext">Next step ▶</button>
+      </div>
+    </div>
+    <div class="console" id="console"></div>
+  </div>
+</section>
+
+</main>
+
+<script>
+document.getElementById('nav').addEventListener('click', e=>{
+  const b = e.target.closest('button'); if(!b) return; showTab(b.dataset.t);
+});
+function showTab(t){
+  document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active', x.dataset.t===t));
+  document.querySelectorAll('section').forEach(s=>s.classList.toggle('active', s.id===t));
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+/* REQUIREMENTS */
+const requirements = [
+  {id:'F1', kind:'f', text:'A product has an id, name and price; a cart item is a product plus a quantity.'},
+  {id:'F2', kind:'f', text:'Add, remove and update items; adding an existing product merges into its quantity.'},
+  {id:'F3', kind:'f', text:'Compute the cart subtotal (sum of price × quantity).'},
+  {id:'F4', kind:'f', text:'Apply charges & discounts on top of the subtotal (discount, tax, coupon, gift wrap) — order matters.'},
+  {id:'F5', kind:'f', text:'Guard rails: reject non-positive quantities; setting quantity to 0 removes the line; empty cart totals 0.'},
+  {id:'NF1',kind:'nf',text:'New charge/offer types must be addable without changing the cart or the existing charges.'},
+];
+const reqList = document.getElementById('reqList');
+requirements.forEach((r,i)=>{
+  const el = document.createElement('div');
+  el.className = 'req '+r.kind;
+  el.innerHTML = `<div class="box">✓</div><div class="txt"><span class="tag">${r.id}</span>${r.text}</div><span class="go">design this →</span>`;
+  el.onclick = ()=>{ el.classList.add('done'); goToStep(i); showTab('design'); };
+  reqList.appendChild(el);
+});
+
+/* CODE RENDERER */
+function code(str){
+  const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return '<pre>'+str.split('\n').map(line=>{
+    let isNew=false;
+    if(line.includes('[[')){ isNew=true; line=line.replace(/\[\[|\]\]/g,''); }
+    let h = esc(line)
+      .replace(/(\/\*[\s\S]*?\*\/)/g,'<span class="cm">$1</span>')
+      .replace(/(\/\/.*)$/,'<span class="cm">$1</span>');
+    if(!h) h='&nbsp;';
+    return '<div class="cl'+(isNew?' new':'')+'">'+h+'</div>';
+  }).join('')+'</pre>';
+}
+
+const steps = [
+  { req:'F1', label:'F1 · Product + CartItem',
+    why:'Two plain data classes. <b>Product</b> carries its price. <b>CartItem</b> pairs a product with a quantity and can total its own line — quantity belongs to the cart, not the product.',
+    chips:['Product','CartItem'], newChips:['Product','CartItem'],
+    code:
+`[[// A product for sale.]]
+[[class Product {]]
+[[    String id;]]
+[[    String name;]]
+[[    double price;]]
+[[}]]
+
+[[// One line in the cart: a product + how many of it.]]
+[[class CartItem {]]
+[[    Product product;]]
+[[    int quantity;]]
+[[    double getTotalPrice() { return product.price * quantity; }]]
+[[}]]`
+  },
+  { req:'F2', label:'F2 · Add / remove / update items',
+    why:'The cart keys items by product id, so adding the same product again just bumps the quantity (no duplicate lines). A <b>LinkedHashMap</b> also preserves insertion order for display.',
+    chips:['Product','CartItem','ShoppingCart'], newChips:['ShoppingCart'],
+    code:
+`[[class ShoppingCart {]]
+[[    Map<String, CartItem> items = new LinkedHashMap<>();]]
+
+[[    void addItem(Product p, int qty) {]]
+[[        CartItem existing = items.get(p.id);]]
+[[        if (existing != null) existing.quantity += qty;   // merge]]
+[[        else items.put(p.id, new CartItem(p, qty));]]
+[[    }]]
+
+[[    void removeItem(String productId) { items.remove(productId); }]]
+
+[[    void updateQuantity(String productId, int qty) {]]
+[[        CartItem it = items.get(productId);]]
+[[        if (it != null) it.quantity = qty;]]
+[[    }]]
+[[}]]`
+  },
+  { req:'F3', label:'F3 · Subtotal',
+    why:'Sum each line\'s total. Compute it on demand so it\'s always correct — no cached total that can drift out of sync when items change.',
+    chips:['...previous...','getSubtotal()'], newChips:['getSubtotal()'],
+    code:
+`class ShoppingCart {
+[[    double getSubtotal() {]]
+[[        double sum = 0;]]
+[[        for (CartItem it : items.values()) {]]
+[[            sum += it.getTotalPrice();]]
+[[        }]]
+[[        return sum;]]
+[[    }]]
+}`
+  },
+  { req:'F4', label:'F4 · Apply charges (first attempt)',
+    why:'A first cut: one calculator that applies charges in a FIXED order. It works — but every new charge, or any re-ordering, means editing this one method. That rigidity is the pain NF1 will fix.',
+    chips:['...previous...','PriceCalculator (naive)'], newChips:['PriceCalculator (naive)'],
+    code:
+`[[// Naive: a hard-coded sequence of charges.]]
+[[class PriceCalculator {]]
+[[    double total(ShoppingCart cart) {]]
+[[        double amount = cart.getSubtotal();]]
+[[        amount = amount * 0.90;   // -10% member discount]]
+[[        amount = amount * 1.08;   // +8% tax]]
+[[        amount = amount - 50;     // -coupon]]
+[[        amount = amount + 30;     // +gift wrap]]
+[[        return amount;            // add a charge? re-order? edit this method.]]
+[[    }]]
+[[}]]`
+  },
+  { req:'F5', label:'F5 · Guard rails',
+    why:'Small but important rules: quantity must be positive; setting it to 0 removes the line; an empty cart naturally totals 0. Enforce them in the cart so they can\'t be bypassed.',
+    chips:['...previous...','validation'], newChips:['validation'],
+    code:
+`class ShoppingCart {
+    void addItem(Product p, int qty) {
+[[        if (qty <= 0) throw new IllegalArgumentException("quantity must be > 0");]]
+        // ...merge as before...
+    }
+
+    void updateQuantity(String productId, int qty) {
+[[        if (qty <= 0) { items.remove(productId); return; }   // 0 removes the line]]
+        CartItem it = items.get(productId);
+        if (it != null) it.quantity = qty;
+    }
+    // getSubtotal() over an empty map returns 0 -> empty cart is free
+}`
+  },
+  { req:'NF1', label:'NF1 · Extensible charges → Decorator',
+    why:'Make each charge a <b>wrapper</b> around a Bill, all sharing one interface. Stack them in any order; add a new charge as a new class — the cart and existing charges never change. That\'s the <b>Decorator pattern</b> (Open/Closed).',
+    chips:['...previous...','Bill','CartBill','BillDecorator','Tax','Discount','Coupon','GiftWrap'],
+    newChips:['Bill','CartBill','BillDecorator','Tax','Discount','Coupon','GiftWrap'],
+    code:
+`[[// Shared interface: base bill AND every charge are a Bill.]]
+[[interface Bill {]]
+[[    double getAmount();]]
+[[    String getDescription();]]
+[[}]]
+
+[[// Base component: the raw subtotal (innermost layer).]]
+[[class CartBill implements Bill {]]
+[[    ShoppingCart cart;]]
+[[    public double getAmount() { return cart.getSubtotal(); }]]
+[[}]]
+
+[[// Base decorator: IS-A Bill and HAS-A Bill (the one it wraps).]]
+[[abstract class BillDecorator implements Bill {]]
+[[    protected Bill wrapped;]]
+[[}]]
+
+[[class DiscountDecorator extends BillDecorator {   // -%]]
+[[    double percent;]]
+[[    public double getAmount() { return wrapped.getAmount() * (1 - percent/100); }]]
+[[}]]
+[[class TaxDecorator extends BillDecorator {         // +%]]
+[[    double rate;]]
+[[    public double getAmount() { return wrapped.getAmount() * (1 + rate/100); }]]
+[[}]]
+[[// CouponDecorator (-flat), GiftWrapDecorator (+flat) follow the same shape.]]
+
+[[// Usage: wrap layer by layer — order is explicit and flexible.]]
+[[Bill bill = new CartBill(cart);]]
+[[bill = new DiscountDecorator(bill, 10);]]
+[[bill = new TaxDecorator(bill, 8);]]
+[[bill = new GiftWrapDecorator(bill, 30);]]
+[[double total = bill.getAmount();   // each layer calls the one it wraps]]`
+  },
+];
+
+const qaByReq = {
+  F1: [
+    {q:'Why is quantity on CartItem, not on Product?', a:'Price/name are intrinsic to the product; quantity is about THIS cart. Putting quantity on Product would break the moment two carts hold the same product. CartItem is the join between a product and a cart.'},
+    {q:'Should price be a double?', a:'For a demo, yes — but real money should be <code>BigDecimal</code> (or integer minor-units/paise). Doubles have rounding errors (0.1 + 0.2 ≠ 0.3), which is unacceptable for currency. Worth calling out in an interview.'},
+  ],
+  F2: [
+    {q:'Why key items by product id in a Map instead of a List?', a:'So adding the same product again merges into one line (bump quantity) and lookups for remove/update are O(1). A List would need a scan and could create duplicate lines for the same product.'},
+    {q:'Why LinkedHashMap specifically?', a:'It keeps items in the order they were first added, so the cart displays predictably. A plain HashMap would show them in arbitrary order.'},
+  ],
+  F3: [
+    {q:'Why compute the subtotal on demand instead of caching a running total?', a:'A cached total is a second source of truth that can drift if any code changes an item without updating it. Recomputing from the items is always correct and, for a cart, cheap. Cache only if profiling shows it matters.'},
+  ],
+  F4: [
+    {q:'What is actually wrong with the fixed-order calculator?', a:'It violates Open/Closed: adding a charge or changing the order means editing this method and risking the existing logic. All charge rules pile into one place, and you can\'t vary them per order (e.g. a cart with no coupon). NF1 fixes this.'},
+  ],
+  F5: [
+    {q:'Throw for bad quantity, but silently remove on 0 — why the difference?', a:'A negative/zero quantity on add is a programming error (throw, fail fast). But "set quantity to 0" is a normal user action meaning "remove it", so handling it gracefully is friendlier than an error.'},
+  ],
+  NF1: [
+    {q:'What pattern is this and why does it fit?', a:'The <b>Decorator pattern</b>. Charges "wrap" a price, each adding behavior, and they share the Bill interface so they nest arbitrarily. It lets you add responsibilities (tax, coupon…) to an object dynamically without subclass explosion.'},
+    {q:'How is a decorator different from plain inheritance?', a:'Inheritance fixes behavior at compile time and would explode combinatorially (TaxedCoupledGiftWrappedBill…). Decorators compose at runtime: you pick which layers and in what order, per order. IS-A <i>and</i> HAS-A the same interface is the trick.'},
+    {q:'Why does the order of wrapping matter?', a:'Because each layer transforms the running amount. Tax-then-coupon differs from coupon-then-tax. The nesting order literally is the calculation order, which is a feature — real pricing rules are order-sensitive.'},
+    {q:'Isn\'t this just Strategy?', a:'Related but different. Strategy swaps ONE algorithm (pick a single discount rule). Decorator STACKS many, each wrapping the last. Here we want several charges combined, so Decorator fits; if we only chose one pricing scheme, Strategy would.'},
+    {q:'How would you keep money exact across all these multiplications?', a:'Use <code>BigDecimal</code> with a defined rounding mode and round once at the end (or per layer per tax rules). Chaining doubles compounds floating-point error — fine for a demo, not for real billing.'},
+  ],
+};
+
+let cur = 0;
+const stepbar = document.getElementById('stepbar');
+steps.forEach((s,i)=>{
+  if(i){ const c=document.createElement('div'); c.className='conn'; stepbar.appendChild(c); }
+  const d=document.createElement('div'); d.className='dot'; d.textContent=s.req; d.onclick=()=>goToStep(i);
+  stepbar.appendChild(d);
+});
+function goToStep(i){ cur=i; renderStep(); showTab('design'); }
+function renderStep(){
+  const s = steps[cur];
+  document.getElementById('stepReq').innerHTML = `<h3 style="margin:0;">📌 ${s.label}</h3>`;
+  document.getElementById('stepWhy').innerHTML = `<b>Why:</b> ${s.why}`;
+  document.getElementById('stepChips').innerHTML = s.chips.map(c=>{
+    const isNew = s.newChips.some(n=>c.includes(n)) || s.newChips.includes(c);
+    return `<span class="chip ${isNew?'new':''}">${isNew?'+ ':''}${c}</span>`;
+  }).join('');
+  document.getElementById('stepCode').innerHTML = code(s.code);
+  const qs = qaByReq[s.req] || [];
+  document.getElementById('stepQA').innerHTML = qs.length ? (
+    '<div class="qawrap"><div class="qatitle">🎤 Interviewer might ask…</div>' +
+    qs.map(x=>`<details class="qa"><summary><span class="q">Q.</span>${x.q}</summary><div class="ans">${x.a}</div></details>`).join('') +
+    '</div>'
+  ) : '';
+  document.querySelectorAll('#stepbar .dot').forEach((d,i)=>{
+    d.classList.toggle('active', i===cur);
+    d.classList.toggle('done', i<cur);
+  });
+  document.getElementById('prevBtn').disabled = cur===0;
+  document.getElementById('nextBtn').textContent = cur===steps.length-1 ? 'See final integration →' : 'Next requirement →';
+}
+document.getElementById('prevBtn').onclick = ()=>{ if(cur>0){cur--;renderStep();} };
+document.getElementById('nextBtn').onclick = ()=>{ if(cur<steps.length-1){cur++;renderStep();} else showTab('integration'); };
+renderStep();
+
+/* DRY RUN */
+function money(n){ return '₹'+n.toFixed(2); }
+function freshState(){ return { items:[], layers:[], flashItem:-1, flashLayer:-1 }; }
+let dstate, dryStep=0;
+
+const dry = [
+  { narr:'Empty cart. Nothing added yet, subtotal ₹0.',
+    log:{txt:'new ShoppingCart()', cls:'sys'} },
+  { narr:'Add <b>2 × Notebook</b> (₹120 each). A new line appears — subtotal ₹240.',
+    log:{txt:'addItem(Notebook ₹120, qty 2)  ->  line total ₹240', cls:'in'},
+    mut:st=>{ st.items.push({name:'Notebook',price:120,qty:2}); st.flashItem=0; } },
+  { narr:'Add <b>5 × Pen</b> (₹20 each). Second line — subtotal ₹340.',
+    log:{txt:'addItem(Pen ₹20, qty 5)  ->  line total ₹100', cls:'in'},
+    mut:st=>{ st.items.push({name:'Pen',price:20,qty:5}); st.flashItem=1; } },
+  { narr:'Add <b>1 × Notebook</b> again — same product, so it <b>merges</b> into the existing line (now qty 3). Subtotal ₹460.',
+    log:{txt:'addItem(Notebook ₹120, qty 1)  ->  merged, Notebook qty 3', cls:'in'},
+    mut:st=>{ st.items[0].qty=3; st.flashItem=0; } },
+  { narr:'Now build the bill. Innermost layer = <b>CartBill</b> → the raw subtotal ₹460.',
+    log:{txt:'Bill bill = new CartBill(cart)  ->  ₹460.00', cls:'out'},
+    mut:st=>{ st.layers=[{op:'CartBill → Subtotal', amt:460}]; st.flashLayer=0; st.flashItem=-1; } },
+  { narr:'Wrap with <b>−10% member discount</b>. It calls the layer inside (₹460) then takes 10% off → ₹414.',
+    log:{txt:'new DiscountDecorator(bill, 10%)  ->  ₹414.00', cls:'out'},
+    mut:st=>{ st.layers.push({op:'− 10% member discount', amt:414}); st.flashLayer=1; } },
+  { narr:'Wrap with <b>+8% tax</b> on the current amount (₹414) → ₹447.12.',
+    log:{txt:'new TaxDecorator(bill, 8%)  ->  ₹447.12', cls:'out'},
+    mut:st=>{ st.layers.push({op:'+ 8% tax', amt:447.12}); st.flashLayer=2; } },
+  { narr:'Wrap with <b>−₹50 coupon</b> (SAVE50) → ₹397.12.',
+    log:{txt:'new CouponDecorator(bill, SAVE50 ₹50)  ->  ₹397.12', cls:'out'},
+    mut:st=>{ st.layers.push({op:'− ₹50 coupon (SAVE50)', amt:397.12}); st.flashLayer=3; } },
+  { narr:'Wrap with <b>+₹30 gift wrap</b> → <b>final total ₹427.12</b>. Notice: re-ordering these layers would change the total!',
+    log:{txt:'new GiftWrapDecorator(bill, ₹30)  ->  TOTAL ₹427.12', cls:'out'},
+    mut:st=>{ st.layers.push({op:'+ ₹30 gift wrap  (TOTAL)', amt:427.12, total:true}); st.flashLayer=4; } },
+];
+
+function subtotal(){ return dstate.items.reduce((s,i)=>s+i.price*i.qty,0); }
+function renderCart(){
+  const cart = document.getElementById('cart');
+  cart.innerHTML = dstate.items.length ? dstate.items.map((it,idx)=>
+    `<div class="item ${idx===dstate.flashItem?'flash':''}"><span>${it.qty} × ${it.name} <span style="color:var(--muted)">(₹${it.price})</span></span><span>${money(it.price*it.qty)}</span></div>`
+  ).join('') : '<div class="hint" style="margin:0;">Cart is empty.</div>';
+  document.getElementById('subtotal').textContent = money(subtotal());
+
+  const pipe = document.getElementById('pipeline');
+  pipe.innerHTML = dstate.layers.length ? dstate.layers.map((l,idx)=>
+    `<div class="lay ${l.total?'total':''} ${idx===dstate.flashLayer?'flash':''}"><span class="op">${l.op}</span><span class="amt">${money(l.amt)}</span></div>`
+  ).join('') : '<div class="hint" style="margin:0;">No charges applied yet.</div>';
+}
+function dryReset(){
+  dryStep=0; dstate=freshState();
+  document.getElementById('console').innerHTML='<div class="ln sys">// console ready — press Next step ▶</div>';
+  document.getElementById('narr').innerHTML='Press <b>Next step ▶</b> to begin.';
+  document.getElementById('dryNext').disabled=false; document.getElementById('dryNext').textContent='Next step ▶';
+  renderCart();
+}
+function dryNext(){
+  if(dryStep>=dry.length) return;
+  const step = dry[dryStep];
+  dstate.flashItem=-1; dstate.flashLayer=-1;
+  if(step.mut) step.mut(dstate);
+  renderCart();
+  document.getElementById('narr').innerHTML = step.narr;
+  const c=document.getElementById('console');
+  const ln=document.createElement('div'); ln.className='ln '+step.log.cls; ln.textContent='> '+step.log.txt;
+  c.appendChild(ln); c.scrollTop=c.scrollHeight;
+  dryStep++;
+  if(dryStep>=dry.length){
+    const done=document.createElement('div'); done.className='ln sys'; done.textContent='// dry run complete ✅';
+    c.appendChild(done);
+    document.getElementById('dryNext').disabled=true; document.getElementById('dryNext').textContent='Done ✓';
+  }
+}
+document.getElementById('dryNext').onclick=dryNext;
+document.getElementById('dryReset').onclick=dryReset;
+dryReset();
+</script>
+</body>
+</html>
