@@ -285,7 +285,37 @@ b.setCheese(true);           // works... but see the cons below`,
       'Replaces big <code>if/else</code> or <code>switch</code> over "which algorithm".'
     ],
     useWhen:['You have several ways to do one thing (pricing, sorting, routing, payment) and want to pick/swap them.'],
-    watch:'Strategy picks ONE algorithm. To STACK several, that\'s Decorator.'
+    watch:'Strategy picks ONE algorithm. To STACK several, that\'s Decorator.',
+    without:{
+      title:'Same thing WITHOUT Strategy (one big if/else)',
+      code:
+`public class PaymentProcessor {
+    // one method that has to know EVERY payment type
+    public void pay(String type, int amount) {
+        if (type.equals("upi")) {
+            System.out.println("Paid " + amount + " via UPI");
+        } else if (type.equals("card")) {
+            System.out.println("Paid " + amount + " via Card");
+        } else if (type.equals("paypal")) {
+            System.out.println("Paid " + amount + " via PayPal");
+        } else {
+            throw new IllegalArgumentException(type);
+        }
+    }
+}
+
+// usage
+PaymentProcessor p = new PaymentProcessor();
+p.pay("upi", 500);
+p.pay("card", 1200);`,
+      cons:[
+        '<b>Violates Open/Closed:</b> every new payment type means <i>editing</i> this method — you can break the ones that already work.',
+        '<b>One class does everything:</b> all unrelated payment logic piles into a single method that keeps growing.',
+        '<b>Hard to test in isolation:</b> UPI logic is tangled with card/PayPal in the same method.',
+        '<b>Duplication:</b> the same if/else tends to get copy-pasted wherever a payment happens.',
+        'Fine for 2 fixed choices that never change — but Strategy scales cleanly as options grow (add a class, touch nothing else).'
+      ]
+    }
   },
   {
     id:'observer', name:'Observer', type:'Behavioral',
