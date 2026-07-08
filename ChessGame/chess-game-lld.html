@@ -185,6 +185,12 @@
     <p class="hint" style="margin:6px 0 0;">The star of this problem: each piece has a <b>different movement rule</b>. Handle that with <b>polymorphism</b> (each piece answers "can I move here?") — not a giant switch.</p>
   </div>
 
+  <div class="card" style="border-color:var(--purple);background:rgba(124,92,255,.05);">
+    <h3>🧩 Design pattern in focus</h3>
+    <p><b>Polymorphism</b> (Open/Closed Principle) — each piece type owns its own <code>canMove()</code> rule, so the game never switches on piece type and new pieces plug in as new subclasses. You'll see it in requirement <b>F2</b> and formalize it in <b>NF1</b>.</p>
+    <p style="margin:0;color:var(--muted);font-size:13.5px;">Compare: this is plain inheritance-based polymorphism — not State (vending machine) or Strategy (elevator/parking).</p>
+  </div>
+
   <div class="card" style="border-color:var(--blue);">
     👉 <b>Next:</b> open the <b>Requirements</b> tab and click each one to build the design piece by piece.
   </div>
@@ -357,7 +363,9 @@ const steps = [
 
 [[class Rook extends Piece {                    // straight, path must be clear]]
 [[    boolean canMove(Board b, Cell s, Cell e) {]]
-[[        if (s.row != e.row && s.col != e.col) return false;]]
+[[        if (s.row != e.row && s.col != e.col) {]]
+[[            return false;]]
+[[        }]]
 [[        return b.isPathClear(s, e);]]
 [[    }]]
 [[}]]
@@ -388,16 +396,21 @@ const steps = [
     code:
 `class ChessGame {
 [[    boolean makeMove(Player p, int sr, int sc, int er, int ec) {]]
-[[        if (p != currentTurn)  return reject("not your turn");]]
+[[        if (p != currentTurn) {]]
+[[            return reject("not your turn");]]
+[[        }]]
 [[        Cell start = board.getCell(sr, sc);]]
 [[        Cell end   = board.getCell(er, ec);]]
 [[        Piece moving = start.piece;]]
-[[        if (moving == null || moving.color != p.color)]]
+[[        if (moving == null || moving.color != p.color) {]]
 [[            return reject("not your piece");]]
-[[        if (end.piece != null && end.piece.color == p.color)]]
+[[        }]]
+[[        if (end.piece != null && end.piece.color == p.color) {]]
 [[            return reject("can't capture your own piece");]]
-[[        if (!moving.canMove(board, start, end))         // the polymorphic call]]
+[[        }]]
+[[        if (!moving.canMove(board, start, end)) {        // the polymorphic call]]
 [[            return reject("illegal move for that piece");]]
+[[        }]]
 
 [[        end.piece = moving;   // capture (if any) is just overwriting the square]]
 [[        start.piece = null;]]

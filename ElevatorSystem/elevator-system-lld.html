@@ -183,6 +183,11 @@
     <p class="hint" style="margin:6px 0 0;">Two decisions to design: <b>which car</b> takes a request (scheduling), and <b>how a car orders its stops</b> as it moves (a mini SCAN).</p>
   </div>
 
+  <div class="card" style="border-color:var(--purple);background:rgba(124,92,255,.05);">
+    <h3>🧩 Design pattern in focus</h3>
+    <p><b>Strategy pattern</b> — the rule for choosing <i>which car</i> answers a request lives behind a <code>SchedulingStrategy</code> interface (nearest / least-busy / energy-saving), swappable without changing the controller. You'll build it in requirement <b>NF1</b>.</p>
+  </div>
+
   <div class="card" style="border-color:var(--blue);">
     👉 <b>Next:</b> open the <b>Requirements</b> tab and click each one to build the design piece by piece.
   </div>
@@ -347,7 +352,10 @@ class Elevator {
 [[    TreeSet<Integer> stops = new TreeSet<>();]]
 
 [[    void addStop(int floor) {]]
-[[        if (floor == currentFloor) { openDoors(); return; }]]
+[[        if (floor == currentFloor) {]]
+[[            openDoors();]]
+[[            return;]]
+[[        }]]
 [[        stops.add(floor);]]
 [[        if (direction == Direction.IDLE) {                 // pick a way to go]]
 [[            direction = floor > currentFloor ? Direction.UP : Direction.DOWN;]]
@@ -361,13 +369,25 @@ class Elevator {
     code:
 `class Elevator {
 [[    void step() {                       // advance one floor]]
-[[        if (stops.isEmpty()) { becomeIdle(); return; }]]
+[[        if (stops.isEmpty()) {]]
+[[            becomeIdle();]]
+[[            return;]]
+[[        }]]
 [[        state = ElevatorState.MOVING;]]
 [[        int target = nextTarget();]]
-[[        if (target > currentFloor)      { currentFloor++; direction = Direction.UP; }]]
-[[        else if (target < currentFloor) { currentFloor--; direction = Direction.DOWN; }]]
-[[        if (stops.remove(currentFloor)) { openDoors(); }   // arrived at a stop]]
-[[        if (stops.isEmpty())            { becomeIdle(); }]]
+[[        if (target > currentFloor) {]]
+[[            currentFloor++;]]
+[[            direction = Direction.UP;]]
+[[        } else if (target < currentFloor) {]]
+[[            currentFloor--;]]
+[[            direction = Direction.DOWN;]]
+[[        }]]
+[[        if (stops.remove(currentFloor)) {   // arrived at a stop]]
+[[            openDoors();]]
+[[        }]]
+[[        if (stops.isEmpty()) {]]
+[[            becomeIdle();]]
+[[        }]]
 [[    }]]
 
 [[    // keep going the current way; only turn around when nothing is left]]
@@ -406,7 +426,10 @@ class Elevator {
 [[        int best = Integer.MAX_VALUE;]]
 [[        for (Elevator e : elevators) {                 // find the NEAREST car]]
 [[            int dist = Math.abs(e.getCurrentFloor() - req.floor);]]
-[[            if (dist < best) { best = dist; chosen = e; }]]
+[[            if (dist < best) {]]
+[[                best = dist;]]
+[[                chosen = e;]]
+[[            }]]
 [[        }]]
 [[        chosen.addStop(req.floor);]]
 [[    }]]

@@ -199,6 +199,11 @@
     <p class="hint" style="margin:6px 0 0;">Notice the "situation matters": selecting before paying, or paying mid-dispense, must behave differently. That hint points straight at the <b>State pattern</b> later.</p>
   </div>
 
+  <div class="card" style="border-color:var(--purple);background:rgba(124,92,255,.05);">
+    <h3>🧩 Design pattern in focus</h3>
+    <p><b>State pattern</b> — the machine's response to the same button changes with its situation (no money / money in / dispensing). Each situation becomes its own class, replacing messy <code>if (status == …)</code> checks. You'll build it in requirement <b>NF1</b>.</p>
+  </div>
+
   <div class="card" style="border-color:var(--blue);">
     👉 <b>Next:</b> open the <b>Requirements</b> tab and click each one to build the design piece by piece.
   </div>
@@ -376,7 +381,9 @@ const steps = [
 [[    }]]
 [[    void reduceStock(String code) {]]
 [[        Product p = products.get(code);]]
-[[        if (p != null && p.count > 0) p.count--;]]
+[[        if (p != null && p.count > 0) {]]
+[[            p.count--;]]
+[[        }]]
 [[    }]]
 [[}]]`
   },
