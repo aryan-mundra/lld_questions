@@ -42,6 +42,10 @@
   .two{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
   @media(max-width:720px){.two{grid-template-columns:1fr;}}
   .codelabel{font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;margin:14px 0 2px;}
+  .filetab{display:inline-block;font-family:ui-monospace,monospace;font-size:12px;font-weight:700;color:var(--ink);
+           background:var(--panel2);border:1px solid var(--line);border-bottom:none;border-radius:8px 8px 0 0;padding:5px 12px;margin:16px 0 0;}
+  .filetab::before{content:"📄 ";}
+  .filetab + pre{margin-top:0;border-top-left-radius:0;}
   pre{background:var(--codebg);border:1px solid var(--line);border-radius:10px;padding:12px 14px;overflow:auto;font-size:12.5px;line-height:1.5;margin:6px 0;color:#111827;}
   pre .cm{color:#98a2b3;}
   .run{background:#0f172a;color:#cbd5e1;border-radius:8px;padding:8px 12px;font-family:ui-monospace,monospace;font-size:12px;margin-top:6px;white-space:pre-wrap;}
@@ -85,19 +89,23 @@ const patterns = [
     id:'singleton', name:'Singleton', type:'Creational',
     intent:'Ensure a class has <b>only one instance</b> and give a global way to reach it.',
     analogy:'A country has <b>one</b> government — everyone refers to the same one, and there\'s a single, well-known way to access it.',
-    codeLabels:['Eager (created at class load)','Lazy (created on first use)'],
+    codeLabels:['EagerSingleton.java','LazySingleton.java'],
     codes:[
-`class EagerSingleton {
+`public class EagerSingleton {
     // created immediately when the class loads
     private static final EagerSingleton INSTANCE = new EagerSingleton();
+
     private EagerSingleton() { }              // private -> nobody can 'new' it
+
     public static EagerSingleton getInstance() {
         return INSTANCE;
     }
 }`,
-`class LazySingleton {
+`public class LazySingleton {
     private static LazySingleton instance;    // not created yet
+
     private LazySingleton() { }
+
     // synchronized -> thread-safe: two threads can't both create one
     public static synchronized LazySingleton getInstance() {
         if (instance == null) {               // create on first use only
@@ -107,9 +115,17 @@ const patterns = [
     }
 }`],
     usage:
-`EagerSingleton a = EagerSingleton.getInstance();
-EagerSingleton b = EagerSingleton.getInstance();
-System.out.println(a == b);   // true — same object`,
+`public class Main {
+    public static void main(String[] args) {
+        EagerSingleton a = EagerSingleton.getInstance();
+        EagerSingleton b = EagerSingleton.getInstance();
+        System.out.println(a == b);   // true — same object
+
+        LazySingleton x = LazySingleton.getInstance();
+        LazySingleton y = LazySingleton.getInstance();
+        System.out.println(x == y);   // true
+    }
+}`,
     points:[
       '<b>Eager:</b> simplest and thread-safe, but the instance is built even if never used.',
       '<b>Lazy:</b> built only when first needed; must guard against two threads creating two copies (here via <code>synchronized</code>).',
@@ -123,15 +139,20 @@ System.out.println(a == b);   // true — same object`,
     id:'factory', name:'Factory', type:'Creational',
     intent:'Create objects through a <b>single method</b> instead of scattering <code>new</code> across the code; the caller asks for a type and gets back an interface.',
     analogy:'You order a "pizza" at the counter — the kitchen decides which concrete pizza to make. You never touch the oven yourself.',
-    codeLabels:['The factory'],
+    codeLabels:['Shape.java','Circle.java','Square.java','ShapeFactory.java'],
     codes:[
-`interface Shape { void draw(); }
-class Circle implements Shape { public void draw(){ System.out.println("Circle"); } }
-class Square implements Shape { public void draw(){ System.out.println("Square"); } }
-
-class ShapeFactory {
+`public interface Shape {
+    void draw();
+}`,
+`public class Circle implements Shape {
+    public void draw() { System.out.println("Circle"); }
+}`,
+`public class Square implements Shape {
+    public void draw() { System.out.println("Square"); }
+}`,
+`public class ShapeFactory {
     // one place that knows how to build shapes
-    static Shape create(String type) {
+    public static Shape create(String type) {
         if (type.equals("circle")) {
             return new Circle();
         } else if (type.equals("square")) {
@@ -142,43 +163,59 @@ class ShapeFactory {
     }
 }`],
     usage:
-`Shape s = ShapeFactory.create("circle");
-s.draw();   // Circle`,
+`public class Main {
+    public static void main(String[] args) {
+        Shape s = ShapeFactory.create("circle");
+        s.draw();   // Circle
+    }
+}`,
     points:[
       'Callers depend on the <code>Shape</code> interface, not concrete classes.',
       'Adding a new shape touches only the factory — not every caller.',
       'Keeps <code>new</code> and construction logic in one spot.'
     ],
     useWhen:['Object creation is non-trivial or the concrete type is decided at runtime (e.g. from config/input).'],
-    watch:'If the switch grows huge, consider a registry/map of suppliers instead.'
+    watch:'If the if/else chain grows huge, consider a registry/map of suppliers instead.'
   },
   {
     id:'builder', name:'Builder', type:'Creational',
     intent:'Build a complex object <b>step by step</b> with readable, chainable calls — avoiding giant constructors with many parameters.',
     analogy:'Ordering a custom burger: you pick bun, patties, cheese one at a time, then say "done" — instead of memorising the order of 8 constructor arguments.',
-    codeLabels:['The builder'],
+    codeLabels:['Burger.java'],
     codes:[
-`class Burger {
-    private final String bun; private final int patties;
+`public class Burger {
+    private final String bun;
+    private final int patties;
     private final boolean cheese;
-    private Burger(Builder b){ bun=b.bun; patties=b.patties; cheese=b.cheese; }
 
-    static class Builder {
-        private String bun = "plain";      // defaults
+    private Burger(Builder b) {           // only the Builder can build one
+        this.bun = b.bun;
+        this.patties = b.patties;
+        this.cheese = b.cheese;
+    }
+
+    public static class Builder {
+        private String bun = "plain";     // defaults
         private int patties = 1;
         private boolean cheese = false;
-        Builder bun(String b){ this.bun=b; return this; }       // return this
-        Builder patties(int n){ this.patties=n; return this; }  // -> chaining
-        Builder cheese(boolean c){ this.cheese=c; return this; }
-        Burger build(){ return new Burger(this); }
+
+        public Builder bun(String b)     { this.bun = b; return this; }      // return this
+        public Builder patties(int n)    { this.patties = n; return this; }  // -> chaining
+        public Builder cheese(boolean c) { this.cheese = c; return this; }
+
+        public Burger build() { return new Burger(this); }
     }
 }`],
     usage:
-`Burger b = new Burger.Builder()
-        .bun("sesame")
-        .patties(2)
-        .cheese(true)
-        .build();`,
+`public class Main {
+    public static void main(String[] args) {
+        Burger b = new Burger.Builder()
+                .bun("sesame")
+                .patties(2)
+                .cheese(true)
+                .build();
+    }
+}`,
     points:[
       'Each setter returns <code>this</code>, so calls chain fluently.',
       'Great when there are many optional fields — no "telescoping" constructors.',
@@ -191,21 +228,31 @@ s.draw();   // Circle`,
     id:'strategy', name:'Strategy', type:'Behavioral',
     intent:'Define a family of interchangeable algorithms behind one interface, and <b>swap which one you use at runtime</b>.',
     analogy:'Google Maps offers routes by car, walking, or transit. You pick one; the app plugs in that routing algorithm without changing the rest.',
-    codeLabels:['The strategy'],
+    codeLabels:['PaymentStrategy.java','UpiPayment.java','CreditCardPayment.java'],
     codes:[
-`interface PaymentStrategy { void pay(int amount); }
-
-class UpiPayment implements PaymentStrategy {
-    public void pay(int amt){ System.out.println("Paid " + amt + " via UPI"); }
-}
-class CreditCardPayment implements PaymentStrategy {
-    public void pay(int amt){ System.out.println("Paid " + amt + " via Card"); }
+`public interface PaymentStrategy {
+    void pay(int amount);
+}`,
+`public class UpiPayment implements PaymentStrategy {
+    public void pay(int amount) {
+        System.out.println("Paid " + amount + " via UPI");
+    }
+}`,
+`public class CreditCardPayment implements PaymentStrategy {
+    public void pay(int amount) {
+        System.out.println("Paid " + amount + " via Card");
+    }
 }`],
     usage:
-`PaymentStrategy strategy = new UpiPayment();  // choose at runtime
-strategy.pay(500);
-strategy = new CreditCardPayment();           // swap freely
-strategy.pay(1200);`,
+`public class Main {
+    public static void main(String[] args) {
+        PaymentStrategy strategy = new UpiPayment();   // choose at runtime
+        strategy.pay(500);
+
+        strategy = new CreditCardPayment();            // swap freely
+        strategy.pay(1200);
+    }
+}`,
     points:[
       'The client holds a <code>PaymentStrategy</code> and doesn\'t care which concrete one it is.',
       'Add a new algorithm = a new class; existing code is untouched (Open/Closed).',
@@ -218,29 +265,44 @@ strategy.pay(1200);`,
     id:'observer', name:'Observer', type:'Behavioral',
     intent:'When one object changes, <b>all its dependents are notified automatically</b> (publish–subscribe).',
     analogy:'A YouTube channel: when it uploads, every subscriber gets a notification. Subscribers can join or leave any time.',
-    codeLabels:['Subject + observers'],
+    codeLabels:['Observer.java','Subscriber.java','Channel.java'],
     codes:[
-`interface Observer { void update(String video); }
-
-class Subscriber implements Observer {
+`public interface Observer {
+    void update(String video);
+}`,
+`public class Subscriber implements Observer {
     private final String name;
-    Subscriber(String n){ name=n; }
-    public void update(String v){ System.out.println(name + " got: " + v); }
-}
 
-class Channel {                         // the Subject
+    public Subscriber(String name) { this.name = name; }
+
+    public void update(String video) {
+        System.out.println(name + " got: " + video);
+    }
+}`,
+`import java.util.ArrayList;
+import java.util.List;
+
+public class Channel {                        // the Subject
     private final List<Observer> subs = new ArrayList<>();
-    void subscribe(Observer o){ subs.add(o); }
-    void unsubscribe(Observer o){ subs.remove(o); }
-    void upload(String video){
-        for (Observer o : subs) o.update(video);   // notify everyone
+
+    public void subscribe(Observer o)   { subs.add(o); }
+    public void unsubscribe(Observer o) { subs.remove(o); }
+
+    public void upload(String video) {
+        for (Observer o : subs) {             // notify everyone
+            o.update(video);
+        }
     }
 }`],
     usage:
-`Channel c = new Channel();
-c.subscribe(new Subscriber("Alice"));
-c.subscribe(new Subscriber("Bob"));
-c.upload("New video!");   // both Alice and Bob are notified`,
+`public class Main {
+    public static void main(String[] args) {
+        Channel c = new Channel();
+        c.subscribe(new Subscriber("Alice"));
+        c.subscribe(new Subscriber("Bob"));
+        c.upload("New video!");   // both Alice and Bob are notified
+    }
+}`,
     points:[
       'The subject knows only the <code>Observer</code> interface — loose coupling.',
       'Observers can subscribe/unsubscribe at runtime.',
@@ -253,23 +315,31 @@ c.upload("New video!");   // both Alice and Bob are notified`,
     id:'adapter', name:'Adapter', type:'Structural',
     intent:'Make two <b>incompatible interfaces work together</b> by wrapping one so it looks like the other.',
     analogy:'A travel plug adapter: your laptop charger (one shape) plugs into a foreign socket (another shape) through an adapter in between.',
-    codeLabels:['Target, adaptee, adapter'],
+    codeLabels:['PaymentGateway.java','ThirdPartyPayPal.java','PayPalAdapter.java'],
     codes:[
-`interface PaymentGateway { void pay(int rupees); }   // what OUR app expects
-
-class ThirdPartyPayPal {                              // adaptee: can't change it
-    void sendDollars(double d){ System.out.println("PayPal $" + d); }
-}
-
-class PayPalAdapter implements PaymentGateway {       // the adapter
+`public interface PaymentGateway {   // what OUR app expects
+    void pay(int rupees);
+}`,
+`// adaptee: a third-party class we can't change (different method + currency)
+public class ThirdPartyPayPal {
+    public void sendDollars(double dollars) {
+        System.out.println("PayPal charged $" + dollars);
+    }
+}`,
+`public class PayPalAdapter implements PaymentGateway {   // the adapter
     private final ThirdPartyPayPal paypal = new ThirdPartyPayPal();
+
     public void pay(int rupees) {
-        paypal.sendDollars(rupees / 83.0);            // translate the call
+        paypal.sendDollars(rupees / 83.0);   // translate the call
     }
 }`],
     usage:
-`PaymentGateway gateway = new PayPalAdapter();  // app sees only its interface
-gateway.pay(830);   // -> PayPal $10.0`,
+`public class Main {
+    public static void main(String[] args) {
+        PaymentGateway gateway = new PayPalAdapter();  // app sees only its interface
+        gateway.pay(830);   // -> PayPal charged $10.0
+    }
+}`,
     points:[
       'The adapter implements the interface your code wants, and delegates to the incompatible class.',
       'Lets you use legacy or third-party code without changing it (or your app).',
@@ -282,29 +352,40 @@ gateway.pay(830);   // -> PayPal $10.0`,
     id:'decorator', name:'Decorator', type:'Structural',
     intent:'Attach extra behavior to an object by <b>wrapping it in layers</b>, all sharing the same interface — stackable and order-sensitive.',
     analogy:'A coffee: start with plain coffee, wrap it with milk, then sugar. Each wrapper adds to the description and the price.',
-    codeLabels:['Component + decorators'],
+    codeLabels:['Coffee.java','SimpleCoffee.java','AddOn.java','Milk.java','Sugar.java'],
     codes:[
-`interface Coffee { String desc(); double cost(); }
-
-class SimpleCoffee implements Coffee {          // base component
-    public String desc(){ return "Coffee"; }
-    public double cost(){ return 50; }
-}
-
-abstract class AddOn implements Coffee {        // IS-A Coffee AND HAS-A Coffee
+`public interface Coffee {
+    String desc();
+    double cost();
+}`,
+`public class SimpleCoffee implements Coffee {   // base component
+    public String desc() { return "Coffee"; }
+    public double cost() { return 50; }
+}`,
+`// IS-A Coffee AND HAS-A Coffee -> that's what lets add-ons nest
+public abstract class AddOn implements Coffee {
     protected final Coffee coffee;
-    AddOn(Coffee c){ this.coffee = c; }
-}
-class Milk extends AddOn {
-    Milk(Coffee c){ super(c); }
-    public String desc(){ return coffee.desc() + " + Milk"; }
-    public double cost(){ return coffee.cost() + 10; }
+    protected AddOn(Coffee coffee) { this.coffee = coffee; }
+}`,
+`public class Milk extends AddOn {
+    public Milk(Coffee c) { super(c); }
+    public String desc() { return coffee.desc() + " + Milk"; }
+    public double cost() { return coffee.cost() + 10; }
+}`,
+`public class Sugar extends AddOn {
+    public Sugar(Coffee c) { super(c); }
+    public String desc() { return coffee.desc() + " + Sugar"; }
+    public double cost() { return coffee.cost() + 5; }
 }`],
     usage:
-`Coffee c = new SimpleCoffee();  // 50
-c = new Milk(c);                 // 60
-c = new Sugar(c);               // 65
-System.out.println(c.desc() + " = " + c.cost());`,
+`public class Main {
+    public static void main(String[] args) {
+        Coffee c = new SimpleCoffee();  // 50
+        c = new Milk(c);                // 60
+        c = new Sugar(c);               // 65
+        System.out.println(c.desc() + " = " + c.cost());
+    }
+}`,
     points:[
       'A decorator <b>is-a</b> and <b>has-a</b> the same interface — that\'s what lets them nest.',
       'Stack any combination at runtime; no subclass explosion.',
@@ -368,14 +449,15 @@ function overviewHtml(){
 function patternHtml(p){
   let codeSection = '';
   p.codes.forEach((c,idx)=>{
-    codeSection += `<div class="codelabel">${p.codeLabels[idx]||'Code'}</div>` + codeBlock(c);
+    codeSection += `<div class="filetab">${p.codeLabels[idx]||'Code'}</div>` + codeBlock(c);
   });
   return `
     <h2>${p.name} <span class="badge ${TB[p.type]}">${p.type}</span></h2>
     <p class="intent">${p.intent}</p>
     <div class="analogy">💡 <b>Analogy:</b> ${p.analogy}</div>
+    <div class="codelabel" style="margin-bottom:6px;">Each class lives in its own file →</div>
     ${codeSection}
-    <div class="codelabel">How you use it</div>
+    <div class="filetab">Main.java</div>
     ${codeBlock(p.usage)}
     <div class="two">
       <div class="card"><h3>🔑 Key points</h3><ul>${p.points.map(x=>`<li>${x}</li>`).join('')}</ul></div>
