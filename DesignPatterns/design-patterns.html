@@ -272,17 +272,33 @@ b.setCheese(true);           // works... but see the cons below`,
     usage:
 `public class Main {
     public static void main(String[] args) {
-        PaymentStrategy strategy = new UpiPayment();   // choose at runtime
-        strategy.pay(500);
+        // In a real app this value comes from user input / config,
+        // so it's only known at RUNTIME (not when you compile).
+        String chosen = "upi";                        // pretend the user picked this
 
-        strategy = new CreditCardPayment();            // swap freely
-        strategy.pay(1200);
+        PaymentStrategy strategy = select(chosen);    // pick the matching strategy
+        strategy.pay(500);                            // runs UpiPayment.pay()
+
+        strategy = select("card");                    // a different runtime choice
+        strategy.pay(1200);                           // runs CreditCardPayment.pay()
+    }
+
+    // the ONE place that turns a runtime value into a strategy object
+    private static PaymentStrategy select(String type) {
+        if (type.equals("upi")) {
+            return new UpiPayment();
+        } else if (type.equals("card")) {
+            return new CreditCardPayment();
+        } else {
+            throw new IllegalArgumentException("Unknown payment: " + type);
+        }
     }
 }`,
     points:[
       'The client holds a <code>PaymentStrategy</code> and doesn\'t care which concrete one it is.',
+      '<b>Choose at runtime:</b> map an input value → a strategy in ONE place (a small <code>select()</code>/factory or a <code>Map</code>), then just call <code>strategy.pay()</code>.',
       'Add a new algorithm = a new class; existing code is untouched (Open/Closed).',
-      'Replaces big <code>if/else</code> or <code>switch</code> over "which algorithm".'
+      'Replaces big <code>if/else</code> scattered everywhere — the only conditional left is the tiny selection step.'
     ],
     useWhen:['You have several ways to do one thing (pricing, sorting, routing, payment) and want to pick/swap them.'],
     watch:'Strategy picks ONE algorithm. To STACK several, that\'s Decorator.',
