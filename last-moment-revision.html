@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LLD — Last Moment Revision</title>
+<style>
+  :root{
+    --bg:#eef1f8;        /* light shaded page */
+    --card:#ffffff;
+    --ink:#1c2333; --muted:#5b6478;
+    --line:#d8dcea; --accent:#4338ca;
+    --codebg:#eef1f7; --codeink:#26304a; --cm:#7a869c;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+       background:var(--bg);color:var(--ink);line-height:1.34;font-size:8.5px;padding:8mm;
+       -webkit-print-color-adjust:exact;print-color-adjust:exact}
+  h1{font-size:13px;margin:0 0 1px}
+  .sub{font-size:8px;color:var(--muted);margin-bottom:8px}
+  .grid{columns:2;column-gap:8px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:6px;
+        padding:6px 8px;margin:0 0 7px;break-inside:avoid;-webkit-column-break-inside:avoid}
+  h2{font-size:9px;margin:0 0 4px;color:var(--accent);
+     border-bottom:1px solid var(--line);padding-bottom:2px}
+  p.note{font-size:7.6px;color:var(--muted);margin:0 0 4px}
+  pre{margin:0;background:var(--codebg);color:var(--codeink);border:1px solid var(--line);
+      border-radius:5px;padding:6px 8px;overflow-x:auto;
+      font-family:"SF Mono",Menlo,Consolas,monospace;font-size:7.6px;line-height:1.5;tab-size:4}
+  .cm{color:var(--cm)}
+  table{border-collapse:collapse;width:100%;font-size:7.6px}
+  th,td{border:1px solid var(--line);padding:2px 5px;text-align:left}
+  th{background:#e4e8f6;color:#312e81;font-weight:600}
+  td code{background:var(--codebg);padding:1px 3px;border-radius:3px;
+          font-family:"SF Mono",Menlo,Consolas,monospace;font-size:7.2px}
+  @page{size:A4;margin:8mm}
+  @media print{ body{padding:0} }
+</style>
+</head>
+<body>
+  <h1>LLD — Last Moment Revision</h1>
+  <div class="sub">quick Java idioms cheat-sheet · fits one A4 page</div>
+
+  <div class="grid">
+
+    <div class="card">
+      <h2>Date / Time</h2>
+      <p class="note">Parse an ISO timestamp; elapsed hours rounded up.</p>
+<pre>LocalDateTime dateTime =
+    LocalDateTime.parse("2026-07-11T15:30:45");
+
+Duration duration =
+    Duration.between(entryTime, exitTime);
+long hours =
+    (long) Math.ceil(duration.toMinutes() / 60.0);</pre>
+    </div>
+
+    <div class="card">
+      <h2>Scanner input</h2>
+      <p class="note">Read a full line, then close.</p>
+<pre>Scanner sc = new Scanner(System.in);
+System.out.print("Enter your name: ");
+String name = sc.nextLine();
+sc.close();</pre>
+    </div>
+
+    <div class="card">
+      <h2>equals() &amp; hashCode() — identity by a field</h2>
+      <p class="note">Override both together, from the same field (<code>id</code>).</p>
+<pre>@Override
+public boolean equals(Object obj) {
+    if (this == obj) return true;
+    if (!(obj instanceof Seat)) return false;
+    Seat other = (Seat) obj;
+    return id.equals(other.id);
+}
+
+@Override
+public int hashCode() {
+    return id.hashCode();
+}</pre>
+    </div>
+
+    <div class="card">
+      <h2>Defensive copy in constructor</h2>
+      <p class="note">Copy incoming collections so callers can't mutate your state.</p>
+<pre>public Show(List&lt;Seat&gt; seats) {
+    this.seats = new ArrayList&lt;&gt;(seats);
+}</pre>
+    </div>
+
+    <div class="card">
+      <h2>synchronized block — one thread at a time</h2>
+      <p class="note">A dedicated final lock guards the critical section.</p>
+<pre>private final Object lock = new Object();  <span class="cm">// key</span>
+
+synchronized (lock) {
+    <span class="cm">// only ONE thread in here at a time</span>
+}</pre>
+    </div>
+
+    <div class="card">
+      <h2>Threads — start ALL, then join ALL</h2>
+      <p class="note">Start every thread first, then wait on each.</p>
+<pre>Thread t1 = new Thread(new Runnable() {
+    public void run() { <span class="cm">/* work */</span> } });
+Thread t2 = new Thread(new Runnable() {
+    public void run() { <span class="cm">/* work */</span> } });
+
+t1.start();   <span class="cm">// start ALL first...</span>
+t2.start();
+try {
+    t1.join(); <span class="cm">// ...then wait for ALL</span>
+    t2.join();
+} catch (InterruptedException e) {
+    Thread.currentThread().interrupt();
+}</pre>
+    </div>
+
+    <div class="card">
+      <h2>Read-only &amp; thread-safe Collections</h2>
+      <p class="note">Wrap to make immutable or thread-safe.</p>
+      <table>
+        <tr><th>Method</th><th>Purpose</th></tr>
+        <tr><td><code>Collections.unmodifiableList(list)</code></td><td>Read-only List</td></tr>
+        <tr><td><code>Collections.unmodifiableSet(set)</code></td><td>Read-only Set</td></tr>
+        <tr><td><code>Collections.unmodifiableMap(map)</code></td><td>Read-only Map</td></tr>
+        <tr><td><code>Collections.unmodifiableCollection(c)</code></td><td>Read-only Collection</td></tr>
+        <tr><td><code>Collections.synchronizedList(list)</code></td><td>Thread-safe List</td></tr>
+        <tr><td><code>Collections.synchronizedSet(set)</code></td><td>Thread-safe Set</td></tr>
+        <tr><td><code>Collections.synchronizedMap(map)</code></td><td>Thread-safe Map</td></tr>
+      </table>
+    </div>
+
+  </div>
+</body>
+</html>
